@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "535222019003",
+    "project_id": "transitrack-709f1",
+    "storage_bucket": "transitrack-709f1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535222019003:android:f10efc7f51e4c6494b5a9e",
+        "android_client_info": {
+          "package_name": "com.example.transitrack_web"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "535222019003-jacgeoje8qp4uu9rsn7v2omts9bcij13.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVi1awMUCpMK6P-AejbbG0Ga2jBtD13Vo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "535222019003-jacgeoje8qp4uu9rsn7v2omts9bcij13.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

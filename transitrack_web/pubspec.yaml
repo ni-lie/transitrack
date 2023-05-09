@@ -34,8 +34,15 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.5
+  provider: ^6.0.5
   firebase_core: ^2.11.0
+  flutter_svg: ^2.0.5
+  shimmer_animation: ^2.1.0+1
+  google_maps: ^6.2.0
+  cloud_firestore: ^4.6.0
+  google_maps_flutter_web: ^0.4.0+8
+
 
 dev_dependencies:
   flutter_test:
@@ -75,10 +82,18 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Black.ttf
+          weight: 800
+        - asset: fonts/Roboto-Bold.ttf
+          weight: 400
+        - asset: fonts/Roboto-Medium.ttf
+          weight: 200
+        - asset: fonts/Roboto-Regular.ttf
+          weight: 100
+
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
