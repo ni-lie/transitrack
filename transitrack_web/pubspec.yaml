@@ -39,9 +39,8 @@ dependencies:
   firebase_core: ^2.11.0
   flutter_svg: ^2.0.5
   shimmer_animation: ^2.1.0+1
-  google_maps: ^6.2.0
   cloud_firestore: ^4.6.0
-  google_maps_flutter_web: ^0.4.0+8
+  mapbox_gl: ^0.16.0
 
 
 dev_dependencies:

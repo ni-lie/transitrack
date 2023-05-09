@@ -44,8 +44,8 @@ class _GoogleMapState extends State<GoogleMap> {
           ..position = LatLng(widget.jeepList[i].location.latitude,
               widget.jeepList[i].location.longitude)
           ..map = map
-          ..title = 'Hello World!'
-          ..label = 'h'
+          ..clickable = true
+          ..title = "Jeepney $i"
         );
       }
 

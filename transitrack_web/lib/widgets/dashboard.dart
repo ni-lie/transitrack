@@ -1,20 +1,16 @@
 import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 import '../components/jeepney_statistics.dart';
 import '../components/route_info_panel_shimmer.dart';
 import '../components/route_statistics.dart';
 import '../config/size_config.dart';
 import '../database_manager.dart';
+import '../mapbox.dart';
 import '../models/jeep_model.dart';
 import '../models/route_model.dart';
-import '../style/big_text.dart';
 import '../style/colors.dart';
-import '../style/small_text.dart';
-import 'maps.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({Key? key}) : super(key: key);
@@ -49,7 +45,7 @@ class _DashboardState extends State<Dashboard> {
                 child: Container(
                   width: double.infinity,
                   height: SizeConfig.screenHeight,
-                  color: AppColors.secondaryBg,
+                  color: AppColors.primaryBg,
                   child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.max,
@@ -61,7 +57,9 @@ class _DashboardState extends State<Dashboard> {
                             child: SizedBox(
                                 width: 35,
                                 height: 35,
-                                child: Icon(Icons.bus_alert_rounded)
+                                child: Icon(
+                                    Icons.bus_alert_rounded,
+                                )
                             ),
                           ),
                           IconButton(
@@ -148,7 +146,8 @@ class _DashboardState extends State<Dashboard> {
                                 return ShimmerWidget(radius: 0);
                               } else {
                                 List<JeepData> jeepList = snapshot.data!;
-                                return  GoogleMap(route: route_choice, jeepList: jeepList,);
+                                // return  GoogleMap(route: route_choice, jeepList: jeepList,);
+                                return MapboxWeb(route: route_choice, positions: jeepList);
                               }
                             }
                         );
@@ -162,7 +161,7 @@ class _DashboardState extends State<Dashboard> {
               child: Container(
                 width: double.infinity,
                 height: SizeConfig.screenHeight,
-                color: AppColors.secondaryBg,
+                color: AppColors.primaryBg,
                 padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
                 child: StreamBuilder(
                     stream: routes_snapshot,
@@ -204,6 +203,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
+
 
 
 

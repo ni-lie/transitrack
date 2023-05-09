@@ -1,4 +1,6 @@
-import 'package:google_maps/google_maps.dart';
+
+
+import 'package:mapbox_gl/mapbox_gl.dart';
 
 class Routes {
   static List<LatLng> ikot = [
@@ -26,6 +28,7 @@ class Routes {
     LatLng(14.659390, 121.068572),
     LatLng(14.657539, 121.068584),
     LatLng(14.657568, 121.064787),
+    LatLng(14.657675, 121.062360),
   ];
 
   static List<LatLng> toki = [
@@ -68,5 +71,6 @@ class Routes {
     LatLng(14.652993042573604, 121.06524063112236),
     LatLng(14.65309679530806, 121.06510112416251),
     LatLng(14.652935908229038, 121.06234378834203),
+    LatLng(14.652960309655244, 121.06229032368765),
   ];
 }
