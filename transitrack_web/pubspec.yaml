@@ -67,16 +67,10 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/jeep_icons/ikot.svg
-    - assets/jeep_icons/toki.svg
-    - assets/jeep_icons/katip.svg
-    - assets/jeep_icons/sm.svg
-    - assets/jeep_icons/philcoa.svg
     - assets/jeep_icons/ikot.png
     - assets/jeep_icons/toki.png
     - assets/jeep_icons/katip.png
-    - assets/jeep_icons/sm.png
-    - assets/jeep_icons/philcoa.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

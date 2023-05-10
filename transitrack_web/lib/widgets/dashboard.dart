@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import '../config/size_config.dart';
 import '../database_manager.dart';
 import '../models/jeep_model.dart';
 import '../style/colors.dart';
+import 'dart:ui' as ui;
 
 class Dashboard extends StatefulWidget {
   const Dashboard({Key? key}) : super(key: key);
@@ -37,7 +39,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _updateSymbols(List<JeepData> Jeepneys) {
-    _jeeps.forEach((jeep) async => await _mapController.removeSymbol(jeep));
+    _mapController.removeSymbols(_jeeps);
     _jeeps.clear();
 
     Jeepneys.forEach((Jeepney) {
