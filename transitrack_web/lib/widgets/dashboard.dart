@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
@@ -24,7 +25,7 @@ class _DashboardState extends State<Dashboard> {
   late MapboxMapController _mapController;
   int route_choice = 0;
   late Stream<Stream<List<JeepData>>> jeeps_snapshot;
-  List<Circle> _circles = [];
+  List<Symbol> _jeeps = [];
   List<Line> _lines = [];
 
   late Stream<List<JeepData>> JeepInfo;
@@ -35,19 +36,21 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-  void _updateCircles(List<JeepData> Jeepneys) {
-    _circles.forEach((circle) => _mapController.removeCircle(circle));
-    _circles.clear();
+  void _updateSymbols(List<JeepData> Jeepneys) {
+    _jeeps.forEach((jeep) async => await _mapController.removeSymbol(jeep));
+    _jeeps.clear();
 
     Jeepneys.forEach((Jeepney) {
-      final circleOptions = CircleOptions(
-        circleRadius: 10.0,
-        circleColor: JeepRoutes[route_choice].color,
-        circleOpacity: 1,
+      double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
+      double angleDegrees = angleRadians * (180 / pi);
+      final jeepEntity = SymbolOptions(
         geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
+        iconSize: 0.15625,
+        iconImage: JeepRoutes[route_choice].image,
+        iconRotate: 90 - angleDegrees
       );
-      _mapController.addCircle(circleOptions).then((circle) {
-        _circles.add(circle);
+      _mapController.addSymbol(jeepEntity).then((jeep) {
+        _jeeps.add(jeep);
       });
     });
   }
@@ -62,16 +65,16 @@ class _DashboardState extends State<Dashboard> {
 
   }
 
-  void _subscribeToCoordinates() {
-    FireStoreDataBase().fetchJeepData(route_choice).listen((event) {
+  Future<void> _subscribeToCoordinates() async {
+    await FireStoreDataBase().fetchJeepData(route_choice).listen((event) {
       if(event.length > 0){
         event.forEach((element) {
           if (element.route_id == route_choice){
-            _updateCircles(event);
+            _updateSymbols(event);
           }
         });
       } else {
-        _updateCircles([]);
+        _updateSymbols([]);
       }
     });
   }

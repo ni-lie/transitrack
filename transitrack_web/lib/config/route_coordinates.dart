@@ -110,15 +110,17 @@ class Routes {
 class JeepRoute {
   String name;
   String color;
+  String image;
 
   JeepRoute({
     required this.name,
-    required this.color
+    required this.color,
+    required this.image
   });
 }
 
 List<JeepRoute> JeepRoutes = [
-  JeepRoute(name: 'Ikot', color: '#FFC107'),
-  JeepRoute(name: 'Toki', color: '#F57F17'),
-  JeepRoute(name: 'Katip', color: '#C62828')
+  JeepRoute(name: 'Ikot', color: '#FFC107', image: 'jeep_icons/ikot.png'),
+  JeepRoute(name: 'Toki', color: '#F57F17', image: 'jeep_icons/toki.png'),
+  JeepRoute(name: 'Katip', color: '#C62828', image: 'jeep_icons/katip.png')
 ];
