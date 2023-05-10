@@ -3,8 +3,7 @@
 import 'package:mapbox_gl/mapbox_gl.dart';
 
 class Routes {
-
-  static List<String> JeepColor = [
+  static List<String> JeepRoute = [
     '#FFC107',
     '#F57F17'
   ];
@@ -83,13 +82,28 @@ class Routes {
   static List<LineOptions> RouteLines = [
     LineOptions(
       geometry: ikot,
-      lineColor: JeepColor[0],
+      lineColor: JeepRoutes[0].color,
       lineWidth: 5,
     ),
     LineOptions(
       geometry: Routes.toki,
-      lineColor: JeepColor[1],
+      lineColor: JeepRoutes[1].color,
       lineWidth: 5,
     )
   ];
 }
+
+class JeepRoute {
+  String name;
+  String color;
+
+  JeepRoute({
+    required this.name,
+    required this.color
+  });
+}
+
+List<JeepRoute> JeepRoutes = [
+  JeepRoute(name: 'Ikot', color: '#FFC107'),
+  JeepRoute(name: 'Toki', color: '#F57F17')
+];

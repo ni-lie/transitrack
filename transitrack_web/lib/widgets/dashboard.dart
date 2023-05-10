@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:transitrack_web/style/big_text.dart';
 import '../components/jeepney_statistics.dart';
 import '../components/route_info_panel_shimmer.dart';
 import '../components/route_statistics.dart';
@@ -43,7 +44,7 @@ class _DashboardState extends State<Dashboard> {
     Jeepneys.forEach((Jeepney) {
       final circleOptions = CircleOptions(
         circleRadius: 10.0,
-        circleColor: Routes.JeepColor[route_choice],
+        circleColor: JeepRoutes[route_choice].color,
         circleOpacity: 1,
         geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
       );
@@ -64,14 +65,23 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _subscribeToCoordinates() {
-    Stream<List<RouteData>> RouteMap = FireStoreDataBase().fetchRouteData(route_choice);
-    List<String> deviceList = [];
-    RouteMap.forEach((element) {
-      element.forEach((element) {
-        deviceList.add(element.device_id);
+    // Stream<List<RouteData>> RouteMap = FireStoreDataBase().fetchRouteData(route_choice);
+    // List<String> deviceList = [];
+    // RouteMap.forEach((element) {
+    //   element.forEach((element) {
+    //     deviceList.add(element.device_id);
+    //   });
+    //   Stream<List<JeepData>> JeepMap = FireStoreDataBase().fetchJeepData(deviceList);
+    //   JeepMap.listen((event) {
+    //     event.forEach((element) {
+    //         _updateCircles(event);
+    //     });
+    //   });
+    // });
+    FireStoreDataBase().getJeepsForRoute(route_choice).listen((event1) {
+      event1.listen((event) {
+        _updateCircles(event);
       });
-      Stream<List<JeepData>> JeepMap = FireStoreDataBase().fetchJeepData(deviceList);
-      JeepMap.listen((event) {_updateCircles(event);});
     });
   }
 
@@ -247,6 +257,8 @@ class _DashboardState extends State<Dashboard> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            BigText(text: JeepRoutes[route_choice].name, size: 50),
+                            SizedBox(height: 20),
                             RouteStatistics(jeepList: jeepList),
                             SizedBox(height: 20),
                             JeepneyStatistics(jeepList: jeepList),
