@@ -25,14 +25,10 @@ class _DashboardState extends State<Dashboard> {
   int route_choice = 0;
   late Stream<Stream<List<JeepData>>> jeeps_snapshot;
   List<Circle> _circles = [];
+  List<Line> _lines = [];
 
   late Stream<List<RouteData>> RouteInfo;
   late Stream<List<JeepData>> JeepInfo;
-
-  Line _currentLine = Line(
-      "currentLine",
-      Routes.RouteLines[0]
-  );
 
   void _setRoute(int choice){
     setState(() {
@@ -47,14 +43,24 @@ class _DashboardState extends State<Dashboard> {
     Jeepneys.forEach((Jeepney) {
       final circleOptions = CircleOptions(
         circleRadius: 10.0,
-        circleColor: "#FFC107",
-        circleOpacity: 0.7,
+        circleColor: Routes.JeepColor[route_choice],
+        circleOpacity: 1,
         geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
       );
       _mapController.addCircle(circleOptions).then((circle) {
         _circles.add(circle);
       });
     });
+  }
+
+  void _updateRoutes(){
+    _lines.forEach((line) => _mapController.removeLine(line));
+    _lines.clear();
+
+    _mapController.addLine(Routes.RouteLines[route_choice]).then((line) {
+      _lines.add(line);
+    });
+
   }
 
   void _subscribeToCoordinates() {
@@ -72,6 +78,7 @@ class _DashboardState extends State<Dashboard> {
   void _onMapCreated(MapboxMapController controller) {
     this._mapController = controller;
     Future.delayed(Duration(seconds: 3), () {
+      _updateRoutes();
       _subscribeToCoordinates();
     });
   }
@@ -131,6 +138,7 @@ class _DashboardState extends State<Dashboard> {
                             onPressed: route_choice != 0 ? (){
                               _setRoute(0);
                               _subscribeToCoordinates();
+                              _updateRoutes();
                               // _mapController.updateLine(_currentLine, Routes.RouteLines[0]);
                             } : null,
                             icon: Icon(
@@ -144,6 +152,7 @@ class _DashboardState extends State<Dashboard> {
                             onPressed: route_choice != 1 ? (){
                               _setRoute(1);
                               _subscribeToCoordinates();
+                              _updateRoutes();
                               // _mapController.updateLine(_currentLine, Routes.RouteLines[1]);
                             } : null,
                             icon: Icon(

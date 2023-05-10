@@ -3,6 +3,12 @@
 import 'package:mapbox_gl/mapbox_gl.dart';
 
 class Routes {
+
+  static List<String> JeepColor = [
+    '#FFC107',
+    '#F57F17'
+  ];
+
   static List<LatLng> ikot = [
     LatLng(14.657675, 121.062360),
     LatLng(14.654756, 121.062316),
@@ -77,25 +83,13 @@ class Routes {
   static List<LineOptions> RouteLines = [
     LineOptions(
       geometry: ikot,
-      lineColor: '#FFC107',
+      lineColor: JeepColor[0],
       lineWidth: 5,
     ),
     LineOptions(
       geometry: Routes.toki,
-      lineColor: '#F57F17',
+      lineColor: JeepColor[1],
       lineWidth: 5,
     )
   ];
-
-  // static Line tokiLine = Line(
-  //   "test",
-  //     LineOptions(
-  //       geometry: Routes.toki,
-  //       lineColor: '#F57F17',
-  //       lineWidth: 5,
-  //     )
-  // );
-
-
-
 }
