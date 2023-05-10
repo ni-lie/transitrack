@@ -39,4 +39,20 @@ class FireStoreDataBase{
       }).toList();
     });
   }
+
+  Stream<Stream<List<JeepData>>> getJeepsForRoute(int routeChoice) {
+    return FirebaseFirestore.instance.collection('routes').where('route_id', isEqualTo: routeChoice).snapshots().map((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
+      final List<RouteData> deviceIds = querySnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+        return RouteData.fromSnapshot(doc);
+      }).toList();
+      List<String> devices = [];
+      for (var i = 0; i < deviceIds.length; i++) {devices.add(deviceIds[i].device_id);}
+      final Query<Map<String, dynamic>> jeepRef = FirebaseFirestore.instance.collection('jeeps').where('device_id', whereIn: devices).where('is_embark', isEqualTo: true);
+      return jeepRef.snapshots().map((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
+        return querySnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+          return JeepData.fromSnapshot(doc);
+        }).toList();
+      });
+    });
+  }
 }

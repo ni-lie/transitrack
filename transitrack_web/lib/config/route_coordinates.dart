@@ -73,4 +73,29 @@ class Routes {
     LatLng(14.652935908229038, 121.06234378834203),
     LatLng(14.652960309655244, 121.06229032368765),
   ];
+
+  static List<LineOptions> RouteLines = [
+    LineOptions(
+      geometry: ikot,
+      lineColor: '#FFC107',
+      lineWidth: 5,
+    ),
+    LineOptions(
+      geometry: Routes.toki,
+      lineColor: '#F57F17',
+      lineWidth: 5,
+    )
+  ];
+
+  // static Line tokiLine = Line(
+  //   "test",
+  //     LineOptions(
+  //       geometry: Routes.toki,
+  //       lineColor: '#F57F17',
+  //       lineWidth: 5,
+  //     )
+  // );
+
+
+
 }

@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:transitrack_web/widgets/shimmer_widget.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 import '../components/jeepney_statistics.dart';
 import '../components/route_info_panel_shimmer.dart';
 import '../components/route_statistics.dart';
+import '../config/keys.dart';
+import '../config/route_coordinates.dart';
 import '../config/size_config.dart';
 import '../database_manager.dart';
-import '../mapbox.dart';
 import '../models/jeep_model.dart';
 import '../models/route_model.dart';
 import '../style/colors.dart';
@@ -20,9 +21,18 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+  late MapboxMapController _mapController;
   int route_choice = 0;
-  late Stream<List<RouteData>> routes_snapshot;
+  late Stream<Stream<List<JeepData>>> jeeps_snapshot;
+  List<Circle> _circles = [];
 
+  late Stream<List<RouteData>> RouteInfo;
+  late Stream<List<JeepData>> JeepInfo;
+
+  Line _currentLine = Line(
+      "currentLine",
+      Routes.RouteLines[0]
+  );
 
   void _setRoute(int choice){
     setState(() {
@@ -30,9 +40,64 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
+  void _updateCircles(List<JeepData> Jeepneys) {
+    _circles.forEach((circle) => _mapController.removeCircle(circle));
+    _circles.clear();
+
+    Jeepneys.forEach((Jeepney) {
+      final circleOptions = CircleOptions(
+        circleRadius: 10.0,
+        circleColor: "#FFC107",
+        circleOpacity: 0.7,
+        geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
+      );
+      _mapController.addCircle(circleOptions).then((circle) {
+        _circles.add(circle);
+      });
+    });
+  }
+
+  void _subscribeToCoordinates() {
+    Stream<List<RouteData>> RouteMap = FireStoreDataBase().fetchRouteData(route_choice);
+    List<String> deviceList = [];
+    RouteMap.forEach((element) {
+      element.forEach((element) {
+        deviceList.add(element.device_id);
+      });
+      Stream<List<JeepData>> JeepMap = FireStoreDataBase().fetchJeepData(deviceList);
+      JeepMap.listen((event) {_updateCircles(event);});
+    });
+  }
+
+  void _onMapCreated(MapboxMapController controller) {
+    this._mapController = controller;
+    Future.delayed(Duration(seconds: 3), () {
+      _subscribeToCoordinates();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    routes_snapshot = FireStoreDataBase().fetchRouteData(route_choice);
+    RouteInfo = FireStoreDataBase().fetchRouteData(route_choice);
+    List<String> deviceList = [];
+    RouteInfo.forEach((element) {
+      element.forEach((element) {
+        deviceList.add(element.device_id);
+      });
+      JeepInfo = FireStoreDataBase().fetchJeepData(deviceList);
+    });
+
     return Scaffold(
       body: SafeArea(
         child: Row(
@@ -65,6 +130,8 @@ class _DashboardState extends State<Dashboard> {
                           IconButton(
                             onPressed: route_choice != 0 ? (){
                               _setRoute(0);
+                              _subscribeToCoordinates();
+                              // _mapController.updateLine(_currentLine, Routes.RouteLines[0]);
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -76,6 +143,8 @@ class _DashboardState extends State<Dashboard> {
                           IconButton(
                             onPressed: route_choice != 1 ? (){
                               _setRoute(1);
+                              _subscribeToCoordinates();
+                              // _mapController.updateLine(_currentLine, Routes.RouteLines[1]);
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -86,7 +155,6 @@ class _DashboardState extends State<Dashboard> {
                           ),
                           IconButton(
                             onPressed: route_choice != 2 ? (){
-                              _setRoute(2);
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -97,7 +165,6 @@ class _DashboardState extends State<Dashboard> {
                           ),
                           IconButton(
                             onPressed: route_choice != 3 ? (){
-                              _setRoute(3);
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -108,7 +175,6 @@ class _DashboardState extends State<Dashboard> {
                           ),
                           IconButton(
                             onPressed: route_choice != 4 ? (){
-                              _setRoute(4);
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -128,32 +194,19 @@ class _DashboardState extends State<Dashboard> {
               child: Container(
                 width: double.infinity,
                 height: SizeConfig.screenHeight,
-                child: StreamBuilder(
-                    stream: routes_snapshot,
-                    builder: (context, snapshot) {
-                      if(snapshot.connectionState == ConnectionState.waiting || snapshot.hasError){
-                        return ShimmerWidget(radius: 0);
-                      } else {
-                        List<RouteData> routeList = snapshot.data!;
-                        List<String> device_list = [];
-                        for (RouteData routeData in routeList) {
-                          device_list.add(routeData.device_id);
-                        }
-                        return StreamBuilder(
-                            stream: FireStoreDataBase().fetchJeepData(device_list),
-                            builder: (context, snapshot) {
-                              if(snapshot.connectionState == ConnectionState.waiting || snapshot.hasError){
-                                return ShimmerWidget(radius: 0);
-                              } else {
-                                List<JeepData> jeepList = snapshot.data!;
-                                // return  GoogleMap(route: route_choice, jeepList: jeepList,);
-                                return MapboxWeb(route: route_choice, positions: jeepList);
-                              }
-                            }
-                        );
-                      }
-                    }
-                ),// GoogleMap(route: route_choice),
+                child: MapboxMap(
+                  accessToken: Keys.MapBoxKey,
+                  styleString: Keys.MapBoxStyle,
+                  onMapCreated: (controller) {
+                    _onMapCreated(controller);
+                  },
+                  onStyleLoadedCallback: (){
+                  },
+                  initialCameraPosition: CameraPosition(
+                    target: Keys.MapCenter,
+                    zoom: 15.0,
+                  ),
+                ),
               ),
             ),
             Expanded(
@@ -164,36 +217,35 @@ class _DashboardState extends State<Dashboard> {
                 color: AppColors.primaryBg,
                 padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
                 child: StreamBuilder(
-                    stream: routes_snapshot,
-                    builder: (context, snapshot) {
-                      if(snapshot.connectionState == ConnectionState.waiting || snapshot.hasError){
-                        return RouteInfoPanelShimmer();
-                      } else {
-                        List<RouteData> routeList = snapshot.data!;
-                        List<String> device_list = [];
-                        for (RouteData routeData in routeList) {
-                          device_list.add(routeData.device_id);
-                        }
-                        return StreamBuilder(
-                            stream: FireStoreDataBase().fetchJeepData(device_list),
-                            builder: (context, snapshot) {
-                              if(snapshot.connectionState == ConnectionState.waiting || snapshot.hasError){
-                                return RouteInfoPanelShimmer();
-                              } else {
-                                List<JeepData> jeepList = snapshot.data!;
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    RouteStatistics(jeepList: jeepList),
-                                    SizedBox(height: 20),
-                                    JeepneyStatistics(jeepList: jeepList),
-                                  ],
-                                );
-                              }
-                            }
-                        );
-                      }
+                  stream: RouteInfo,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return RouteInfoPanelShimmer();
                     }
+                    if (!snapshot.hasData) {
+                      return RouteInfoPanelShimmer();
+                    }
+                    return StreamBuilder(
+                      stream: JeepInfo,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return RouteInfoPanelShimmer();
+                        }
+                        if (!snapshot.hasData) {
+                          return RouteInfoPanelShimmer();
+                        }
+                        List<JeepData> jeepList = snapshot.data!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RouteStatistics(jeepList: jeepList),
+                            SizedBox(height: 20),
+                            JeepneyStatistics(jeepList: jeepList),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 )
               ),
             )
