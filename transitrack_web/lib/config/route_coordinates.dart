@@ -3,11 +3,6 @@
 import 'package:mapbox_gl/mapbox_gl.dart';
 
 class Routes {
-  static List<String> JeepRoute = [
-    '#FFC107',
-    '#F57F17'
-  ];
-
   static List<LatLng> ikot = [
     LatLng(14.657675, 121.062360),
     LatLng(14.654756, 121.062316),
@@ -79,15 +74,34 @@ class Routes {
     LatLng(14.652960309655244, 121.06229032368765),
   ];
 
+  static List<LatLng> katip = [
+    LatLng(14.651908, 121.073496),
+    LatLng(14.650599, 121.074434),
+    LatLng(14.650197, 121.076186),
+    LatLng(14.651274, 121.078732),
+    LatLng(14.652399, 121.077775),
+    LatLng(14.652326, 121.076140),
+    LatLng(14.651472, 121.074564),
+    LatLng(14.651908, 121.073496),
+  ];
+
   static List<LineOptions> RouteLines = [
     LineOptions(
       geometry: ikot,
       lineColor: JeepRoutes[0].color,
+      lineOpacity: 0.8,
       lineWidth: 5,
     ),
     LineOptions(
       geometry: Routes.toki,
       lineColor: JeepRoutes[1].color,
+      lineOpacity: 0.8,
+      lineWidth: 5,
+    ),
+    LineOptions(
+      geometry: Routes.katip,
+      lineColor: JeepRoutes[2].color,
+      lineOpacity: 0.8,
       lineWidth: 5,
     )
   ];
@@ -105,5 +119,6 @@ class JeepRoute {
 
 List<JeepRoute> JeepRoutes = [
   JeepRoute(name: 'Ikot', color: '#FFC107'),
-  JeepRoute(name: 'Toki', color: '#F57F17')
+  JeepRoute(name: 'Toki', color: '#F57F17'),
+  JeepRoute(name: 'Katip', color: '#C62828')
 ];

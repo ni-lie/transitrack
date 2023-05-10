@@ -7,6 +7,7 @@ class JeepData{
   int passenger_count;
   GeoPoint location;
   bool is_embark;
+  int route_id;
 
   JeepData({
     required this.device_id,
@@ -15,6 +16,7 @@ class JeepData{
     required this.passenger_count,
     required this.location,
     required this.is_embark,
+    required this.route_id
   });
 
   factory JeepData.fromSnapshot(QueryDocumentSnapshot<Object?> snapshot) {
@@ -26,6 +28,7 @@ class JeepData{
     int passenger_count = data['passenger_count'];
     GeoPoint location = data['location'];
     bool is_embark = data['is_embark'];
+    int route_id = data['route_id'];
 
     return JeepData(
       device_id: device_id,
@@ -34,6 +37,7 @@ class JeepData{
       passenger_count: passenger_count,
       location: location,
       is_embark: is_embark,
+      route_id: route_id
     );
   }
 }

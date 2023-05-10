@@ -11,7 +11,6 @@ import '../config/route_coordinates.dart';
 import '../config/size_config.dart';
 import '../database_manager.dart';
 import '../models/jeep_model.dart';
-import '../models/route_model.dart';
 import '../style/colors.dart';
 
 class Dashboard extends StatefulWidget {
@@ -28,7 +27,6 @@ class _DashboardState extends State<Dashboard> {
   List<Circle> _circles = [];
   List<Line> _lines = [];
 
-  late Stream<List<RouteData>> RouteInfo;
   late Stream<List<JeepData>> JeepInfo;
 
   void _setRoute(int choice){
@@ -78,15 +76,22 @@ class _DashboardState extends State<Dashboard> {
     //     });
     //   });
     // });
-    FireStoreDataBase().getJeepsForRoute(route_choice).listen((event1) {
-      event1.listen((event) {
-        _updateCircles(event);
+    // FireStoreDataBase().getJeepsForRoute(route_choice).listen((event1) {
+    //   event1.listen((event) {
+    //     _updateCircles(event);
+    //   });
+    // });
+    FireStoreDataBase().fetchJeepData(route_choice).listen((event) {
+      event.forEach((element) {
+        if (element.route_id == route_choice){
+          _updateCircles(event);
+        }
       });
     });
   }
 
   void _onMapCreated(MapboxMapController controller) {
-    this._mapController = controller;
+    _mapController = controller;
     Future.delayed(Duration(seconds: 3), () {
       _updateRoutes();
       _subscribeToCoordinates();
@@ -106,15 +111,7 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    RouteInfo = FireStoreDataBase().fetchRouteData(route_choice);
-    List<String> deviceList = [];
-    RouteInfo.forEach((element) {
-      element.forEach((element) {
-        deviceList.add(element.device_id);
-      });
-      JeepInfo = FireStoreDataBase().fetchJeepData(deviceList);
-    });
-
+    JeepInfo = FireStoreDataBase().fetchJeepData(route_choice);
     return Scaffold(
       body: SafeArea(
         child: Row(
@@ -163,7 +160,6 @@ class _DashboardState extends State<Dashboard> {
                               _setRoute(1);
                               _subscribeToCoordinates();
                               _updateRoutes();
-                              // _mapController.updateLine(_currentLine, Routes.RouteLines[1]);
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -174,6 +170,9 @@ class _DashboardState extends State<Dashboard> {
                           ),
                           IconButton(
                             onPressed: route_choice != 2 ? (){
+                              // _setRoute(2);
+                              // _subscribeToCoordinates();
+                              // _updateRoutes();
                             } : null,
                             icon: Icon(
                                 Icons.directions_bus,
@@ -236,29 +235,21 @@ class _DashboardState extends State<Dashboard> {
                 color: AppColors.primaryBg,
                 padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
                 child: StreamBuilder(
-                  stream: RouteInfo,
+                  stream: JeepInfo,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData || snapshot.hasError) {
                       return RouteInfoPanelShimmer();
                     }
-                    return StreamBuilder(
-                      stream: JeepInfo,
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData || snapshot.hasError) {
-                          return RouteInfoPanelShimmer();
-                        }
-                        List<JeepData> jeepList = snapshot.data!;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            BigText(text: JeepRoutes[route_choice].name, size: 50),
-                            SizedBox(height: 20),
-                            RouteStatistics(jeepList: jeepList),
-                            SizedBox(height: 20),
-                            JeepneyStatistics(jeepList: jeepList),
-                          ],
-                        );
-                      },
+                    List<JeepData> jeepList = snapshot.data!;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        BigText(text: JeepRoutes[route_choice].name, size: 50),
+                        SizedBox(height: 20),
+                        RouteStatistics(jeepList: jeepList),
+                        SizedBox(height: 20),
+                        JeepneyStatistics(jeepList: jeepList),
+                      ],
                     );
                   },
                 )
