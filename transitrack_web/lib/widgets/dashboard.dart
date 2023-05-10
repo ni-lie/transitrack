@@ -63,30 +63,16 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _subscribeToCoordinates() {
-    // Stream<List<RouteData>> RouteMap = FireStoreDataBase().fetchRouteData(route_choice);
-    // List<String> deviceList = [];
-    // RouteMap.forEach((element) {
-    //   element.forEach((element) {
-    //     deviceList.add(element.device_id);
-    //   });
-    //   Stream<List<JeepData>> JeepMap = FireStoreDataBase().fetchJeepData(deviceList);
-    //   JeepMap.listen((event) {
-    //     event.forEach((element) {
-    //         _updateCircles(event);
-    //     });
-    //   });
-    // });
-    // FireStoreDataBase().getJeepsForRoute(route_choice).listen((event1) {
-    //   event1.listen((event) {
-    //     _updateCircles(event);
-    //   });
-    // });
     FireStoreDataBase().fetchJeepData(route_choice).listen((event) {
-      event.forEach((element) {
-        if (element.route_id == route_choice){
-          _updateCircles(event);
-        }
-      });
+      if(event.length > 0){
+        event.forEach((element) {
+          if (element.route_id == route_choice){
+            _updateCircles(event);
+          }
+        });
+      } else {
+        _updateCircles([]);
+      }
     });
   }
 
