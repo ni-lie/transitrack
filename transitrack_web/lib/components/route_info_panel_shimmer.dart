@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../style/big_text.dart';
 import '../widgets/shimmer_widget.dart';
 
 class RouteInfoPanelShimmer extends StatelessWidget {
@@ -12,6 +13,8 @@ class RouteInfoPanelShimmer extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        ShimmerWidget(radius: 30, height: 70, width: 110),
+        SizedBox(height: 20),
         ShimmerWidget(radius: 30, height: 150),
         SizedBox(height: 20),
         Expanded(

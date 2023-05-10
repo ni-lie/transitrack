@@ -238,19 +238,13 @@ class _DashboardState extends State<Dashboard> {
                 child: StreamBuilder(
                   stream: RouteInfo,
                   builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return RouteInfoPanelShimmer();
-                    }
-                    if (!snapshot.hasData) {
+                    if (!snapshot.hasData || snapshot.hasError) {
                       return RouteInfoPanelShimmer();
                     }
                     return StreamBuilder(
                       stream: JeepInfo,
                       builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return RouteInfoPanelShimmer();
-                        }
-                        if (!snapshot.hasData) {
+                        if (!snapshot.hasData || snapshot.hasError) {
                           return RouteInfoPanelShimmer();
                         }
                         List<JeepData> jeepList = snapshot.data!;
