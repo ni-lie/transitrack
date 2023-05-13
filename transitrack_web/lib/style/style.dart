@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-import 'colors.dart';
+import 'constants.dart';
 
 class PrimaryText extends StatelessWidget {
   final double size;
@@ -12,7 +12,7 @@ class PrimaryText extends StatelessWidget {
     required this.text,
     this.size = 20,
     this.fontWeight = FontWeight.w400,
-    this.color = AppColors.primary,
+    this.color = Constants.primary,
     this.height = 1.3});
 
   @override

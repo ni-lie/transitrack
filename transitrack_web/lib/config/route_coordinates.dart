@@ -1,8 +1,13 @@
 
 
+import 'dart:js_interop';
+import 'dart:ui';
+
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:transitrack_web/style/constants.dart';
 
 class Routes {
+
   static List<LatLng> ikot = [
     LatLng(14.657675, 121.062360),
     LatLng(14.654756, 121.062316),
@@ -75,33 +80,147 @@ class Routes {
   ];
 
   static List<LatLng> katip = [
-    LatLng(14.651908, 121.073496),
-    LatLng(14.650599, 121.074434),
-    LatLng(14.650197, 121.076186),
-    LatLng(14.651274, 121.078732),
-    LatLng(14.652399, 121.077775),
-    LatLng(14.652326, 121.076140),
-    LatLng(14.651472, 121.074564),
-    LatLng(14.651908, 121.073496),
+    LatLng(14.6323447623831,121.074405213629),
+    LatLng(14.6326825733295,121.074422244595),
+    LatLng(14.6329482901109,121.074437146691),
+    LatLng(14.6333767320084,121.074426502336),
+    LatLng(14.6365860234475,121.074533239344),
+    LatLng(14.6385678787093,121.074616690075),
+    LatLng(14.6420837926593,121.07476083228),
+    LatLng(14.6432251680955,121.074817730516),
+    LatLng(14.643632538575,121.074806350867),
+    LatLng(14.6439665084156,121.074798764428),
+    LatLng(14.6444362673135,121.074707727235),
+    LatLng(14.6451652588312,121.074602570179),
+    LatLng(14.646083950015,121.074495311361),
+    LatLng(14.6465758942317,121.074474715092),
+    LatLng(14.647220718189,121.074477998259),
+    LatLng(14.6486183596855,121.074517396277),
+    LatLng(14.6494381400028,121.074518387762),
+    LatLng(14.651088562606,121.074513023344),
+    LatLng(14.6523808660169,121.074480836878),
+    LatLng(14.6534188551666,121.074513023384),
+    LatLng(14.6543893706103,121.074620311773),
+    LatLng(14.6549395004294,121.074582760849),
+    LatLng(14.657534433826,121.074577396454),
+    LatLng(14.6575673394275,121.07272185565),
+    LatLng(14.6593848545115,121.072739919679),
+    LatLng(14.6594198065771,121.068561099031),
+    LatLng(14.6575323870741,121.068555077629),
+    LatLng(14.6577043643201,121.062401754888),
+    LatLng(14.6529648884757,121.062302514649),
+    LatLng(14.6530434441401,121.065144393935),
+    LatLng(14.6517778213417,121.067011914714),
+    LatLng(14.6522142438102,121.067670508964),
+    LatLng(14.6524235482375,121.068239092347),
+    LatLng(14.6524767210812,121.068671605683),
+    LatLng(14.6525801531953,121.074303311717),
+    LatLng(14.6471529029232,121.074279423725),
+    LatLng(14.644376652189,121.074527072591),
+    LatLng(14.6434379992996,121.074608318195),
+    LatLng(14.6405988966819,121.074488839371),
+    LatLng(14.6317717235596,121.073976135937),
+    LatLng(14.6323447623831,121.074405213629),
+  ];
+
+  static List<LatLng> sm = [
+    LatLng(14.6542219,121.0543598),
+    LatLng(14.6547305,121.0569347),
+    LatLng(14.6547536,121.0587669),
+    LatLng(14.6547951,121.0623267),
+    LatLng(14.6529527,121.0622999),
+    LatLng(14.6530461,121.0651109),
+    LatLng(14.6517797,121.0670528),
+    LatLng(14.6521933,121.0675808),
+    LatLng(14.6524113,121.0682192),
+    LatLng(14.6524684,121.0686645),
+    LatLng(14.6525354,121.0716758),
+    LatLng(14.6539211,121.071662),
+    LatLng(14.6539471,121.0727724),
+    LatLng(14.6545751,121.0731157),
+    LatLng(14.6555672,121.0731061),
+    LatLng(14.6561848,121.0727735),
+    LatLng(14.6593973,121.0727198),
+    LatLng(14.6594025,121.0685467),
+    LatLng(14.6575445,121.0685736),
+    LatLng(14.6575757,121.0647927),
+    LatLng(14.6576276,121.0641865),
+    LatLng(14.6576847,121.0623465),
+    LatLng(14.6549673,121.0623251),
+    LatLng(14.6548585,121.0566478),
+    LatLng(14.6549401,121.0558828),
+    LatLng(14.6550491,121.0556897),
+    LatLng(14.6552463,121.0555502),
+    LatLng(14.6569245,121.0580967),
+    LatLng(14.6576084,121.059172),
+    LatLng(14.6578458,121.0592689),
+    LatLng(14.6579807,121.0591643),
+    LatLng(14.6579522,121.0589363),
+    LatLng(14.6529661,121.0514811),
+    LatLng(14.6531132,121.0512071),
+    LatLng(14.6535388,121.0508691),
+    LatLng(14.6540422,121.0501878),
+    LatLng(14.6544522,121.0491847),
+    LatLng(14.6544765,121.0484651),
+    LatLng(14.6541859,121.0476336),
+    LatLng(14.653589,121.0469523),
+    LatLng(14.6527291,121.0466258),
+    LatLng(14.652262,121.0459713),
+    LatLng(14.6553994,121.0316384),
+    LatLng(14.6556734,121.031743),
+    LatLng(14.6557175,121.0316948),
+    LatLng(14.655445,121.0315741),
+    LatLng(14.6556007,121.0307479),
+    LatLng(14.6555203,121.0306567),
+    LatLng(14.6554632,121.0306889),
+    LatLng(14.6537326,121.0384553),
+    LatLng(14.6492329,121.0392278),
+    LatLng(14.6461204,121.0407885),
+    LatLng(14.6435908,121.0430332),
+    LatLng(14.6412033,121.0468741),
+    LatLng(14.6482756,121.0486665),
+    LatLng(14.6485454,121.0492835),
+    LatLng(14.6485091,121.0499862),
+    LatLng(14.6487219,121.0507587),
+    LatLng(14.649272,121.0514346),
+    LatLng(14.6499547,121.0519133),
+    LatLng(14.6505435,121.0520029),
+    LatLng(14.651312,121.051943),
+    LatLng(14.6520542,121.0517981),
+    LatLng(14.6526986,121.0516549),
+    LatLng(14.6542185,121.0541626),
+    LatLng(14.6542219,121.0543598),
   ];
 
   static List<LineOptions> RouteLines = [
     LineOptions(
       geometry: ikot,
-      lineColor: JeepRoutes[0].color,
-      lineOpacity: 0.8,
+      lineColor: '#${JeepRoutes[0].color.value.toRadixString(16).padLeft(8,'0').substring(2)}',
+      lineOpacity: 0.9,
       lineWidth: 5,
     ),
     LineOptions(
-      geometry: Routes.toki,
-      lineColor: JeepRoutes[1].color,
-      lineOpacity: 0.8,
+      geometry: toki,
+      lineColor: '#${JeepRoutes[1].color.value.toRadixString(16).padLeft(8,'0').substring(2)}',
+      lineOpacity: 0.9,
       lineWidth: 5,
     ),
     LineOptions(
-      geometry: Routes.katip,
-      lineColor: JeepRoutes[2].color,
-      lineOpacity: 0.8,
+      geometry: katip,
+      lineColor: '#${JeepRoutes[2].color.value.toRadixString(16).padLeft(8,'0').substring(2)}',
+      lineOpacity: 0.9,
+      lineWidth: 5,
+    ),
+    LineOptions(
+      geometry: katip,
+      lineColor: '#${JeepRoutes[3].color.value.toRadixString(16).padLeft(8,'0').substring(2)}',
+      lineOpacity: 0.9,
+      lineWidth: 5,
+    ),
+    LineOptions(
+      geometry: sm,
+      lineColor: '#${JeepRoutes[4].color.value.toRadixString(16).padLeft(8,'0').substring(2)}',
+      lineOpacity: 0.9,
       lineWidth: 5,
     )
   ];
@@ -109,18 +228,22 @@ class Routes {
 
 class JeepRoute {
   String name;
-  String color;
+  Color color;
   String image;
+  List<int> OpHours;
 
   JeepRoute({
     required this.name,
     required this.color,
-    required this.image
+    required this.image,
+    required this.OpHours
   });
 }
 
 List<JeepRoute> JeepRoutes = [
-  JeepRoute(name: 'Ikot', color: '#FFC107', image: 'jeep_icons/ikot.png'),
-  JeepRoute(name: 'Toki', color: '#F57F17', image: 'jeep_icons/toki.png'),
-  JeepRoute(name: 'Katip', color: '#C62828', image: 'jeep_icons/katip.png')
+  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'jeep_icons/ikot.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'jeep_icons/toki.png', OpHours: [17, 21]),
+  JeepRoute(name: 'Katip', color: Constants.katipColor, image: 'jeep_icons/katip.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'jeep_icons/katip.png', OpHours: [8, 17]),
+  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'jeep_icons/sm.png', OpHours: [8, 17]),
 ];

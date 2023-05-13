@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:transitrack_web/style/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:transitrack_web/style/constants.dart';
 import 'package:transitrack_web/widgets/dashboard.dart';
 import 'firebase_options.dart';
 
@@ -22,9 +23,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'TransiTrack',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: AppColors.primaryBg
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Constants.bgColor,
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).apply(bodyColor: Colors.white),
+        canvasColor: Constants.secondaryColor
       ),
       home: Dashboard(),
     );

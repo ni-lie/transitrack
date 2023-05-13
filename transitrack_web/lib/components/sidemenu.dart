@@ -1,88 +1,52 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 
-import '../config/size_config.dart';
-import '../style/colors.dart';
+import '../config/route_coordinates.dart';
 
-class SideMenu extends StatelessWidget {
-  const SideMenu({Key? key}) : super(key: key);
+class DrawerListTile extends StatelessWidget {
+  const DrawerListTile({
+    super.key, required this.Route, required this.icon, required this.press, required this.isSelected,
+  });
+
+  final JeepRoute Route;
+  final Icon icon;
+  final ui.VoidCallback? press;
+  final bool isSelected;
+
+  String formatTime(List<int> timeList) {
+    int startHour = timeList[0];
+    int endHour = timeList[1];
+
+    String startSuffix = (startHour >= 12) ? 'PM' : 'AM';
+    String endSuffix = (endHour >= 12) ? 'PM' : 'AM';
+
+    if (startHour > 12) {
+      startHour -= 12;
+    } else if (startHour == 0) {
+      startHour = 12;
+    }
+
+    if (endHour > 12) {
+      endHour -= 12;
+    } else if (endHour == 0) {
+      endHour = 12;
+    }
+
+    return '$startHour $startSuffix - $endHour $endSuffix';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      elevation: 0,
-      child: Container(
-        width: double.infinity,
-        height: SizeConfig.screenHeight,
-        color: AppColors.secondaryBg,
-        child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Container(
-                  height: 100,
-                  alignment: Alignment.topCenter,
-                  padding: EdgeInsets.only(top: 20),
-                  child: SizedBox(
-                      width: 35,
-                      height: 35,
-                      child: Icon(Icons.bus_alert_rounded)
-                  ),
-                ),
-                IconButton(
-                  onPressed: (){
-                  },
-                  icon: Icon(
-                      Icons.directions_bus,
-                      color: Colors.yellow[700]
-                  ),
-                  iconSize: 30,
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                ),
-                IconButton(
-                  onPressed: (){
-                  },
-                  icon: Icon(
-                      Icons.directions_bus,
-                      color: Colors.yellow[900]
-                  ),
-                  iconSize: 30,
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                ),
-                IconButton(
-                  onPressed: (){
-                  },
-                  icon: Icon(
-                      Icons.directions_bus,
-                      color: Colors.red[800]
-                  ),
-                  iconSize: 30,
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                ),
-                IconButton(
-                  onPressed: (){
-                  },
-                  icon: Icon(
-                      Icons.directions_bus,
-                      color: Colors.green[700]
-                  ),
-                  iconSize: 30,
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                ),
-                IconButton(
-                  onPressed: (){
-                  },
-                  icon: Icon(
-                      Icons.directions_bus,
-                      color: Colors.blue[500]
-                  ),
-                  iconSize: 30,
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                ),
-              ],
-            )
-        ),
-      ),
+    return ListTile(
+      onTap: press,
+      horizontalTitleGap: 0.0,
+      leading: icon,
+      title: Text(Route.name, style: const TextStyle(color: Colors.white54)),
+      subtitle: Text(formatTime(Route.OpHours), style: const TextStyle(color: Colors.white30)),
+      selected: isSelected,
+      selectedTileColor: Colors.white10
+      // selectedTileColor: Colors.blue,
     );
   }
 }

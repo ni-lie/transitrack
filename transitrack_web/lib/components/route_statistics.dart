@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../models/jeep_model.dart';
-import '../style/colors.dart';
+import '../style/constants.dart';
 import '../style/small_text.dart';
 
 class RouteStatistics extends StatelessWidget {
@@ -22,8 +22,8 @@ class RouteStatistics extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30.0),
-                  color: AppColors.white,
-                  boxShadow: const [BoxShadow(color: AppColors.iconGray,
+                  color: Constants.white,
+                  boxShadow: const [BoxShadow(color: Constants.iconGray,
                       blurRadius: 15.0,
                       offset:  Offset(10.0, 15.0)
                   )]
