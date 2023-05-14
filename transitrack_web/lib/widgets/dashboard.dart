@@ -7,7 +7,7 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:transitrack_web/style/big_text.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 import '../address_finder.dart';
-import '../components/jeepney_statistics.dart';
+import '../components/jeep_info_card.dart';
 import '../components/main_screen.dart';
 import '../components/route_info_panel_shimmer.dart';
 import '../components/route_statistics.dart';
@@ -305,7 +305,6 @@ class _DashboardState extends State<Dashboard> {
                                                 ],
                                               ),
                                             ),
-                                            SizedBox(height: Constants.defaultPadding),
                                             // Make this into a listview builder
                                             ListView.builder(
                                               shrinkWrap: true,
@@ -313,43 +312,8 @@ class _DashboardState extends State<Dashboard> {
                                               itemBuilder: (context, index) {
                                                   return Column(
                                                     children: [
-                                                      Container(
-                                                        padding: EdgeInsets.all(Constants.defaultPadding),
-                                                        decoration: BoxDecoration(
-                                                          border: Border.all(
-                                                            width: 2,
-                                                            color: JeepRoutes[route_choice].color.withOpacity(0.15),
-                                                          ),
-                                                          borderRadius: BorderRadius.all(Radius.circular(Constants.defaultPadding)),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            SizedBox(
-                                                              height: 20,
-                                                              width: 20,
-                                                              child: Icon(Icons.directions_bus, color: JeepRoutes[route_choice].color),
-                                                            ),
-                                                            SizedBox(width: Constants.defaultPadding),
-                                                            Expanded(
-                                                              child: Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                children: [
-                                                                  StreamBuilder(
-                                                                    stream: getAddressFromLatLngStream(data[index].location.latitude, data[index].location.longitude),
-                                                                    builder: (context, snapshot) {
-                                                                      if(snapshot.data == null){
-                                                                        return Text("Fetching Location...", maxLines: 1, overflow: TextOverflow.ellipsis);
-                                                                      }
-                                                                    return Text("${snapshot.data}", maxLines: 1, overflow: TextOverflow.ellipsis);
-                                                                  }),
-                                                                  Text("${data[index].passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70)),
-                                                                ],
-                                                              )
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
                                                       SizedBox(height: Constants.defaultPadding),
+                                                      JeepInfoCard(route_choice: route_choice, data: data, index: index),
                                                     ],
                                                   );
                                                 }
@@ -409,6 +373,8 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
+
+
 
 
 

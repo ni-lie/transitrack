@@ -38,12 +38,12 @@ dependencies:
   provider: ^6.0.5
   firebase_core: ^2.11.0
   flutter_svg: ^2.0.5
-  shimmer_animation: ^2.1.0+1
   cloud_firestore: ^4.6.0
   mapbox_gl: ^0.16.0
   google_fonts: ^4.0.4
   fl_chart: ^0.62.0
   flutter_switch: ^0.3.2
+  shimmer: ^2.0.0
 
 
 
