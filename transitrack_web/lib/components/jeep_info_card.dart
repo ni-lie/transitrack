@@ -28,6 +28,7 @@ class JeepInfoCard extends StatelessWidget {
         if(snapshot.data == null){
           return Container(
             padding: EdgeInsets.all(Constants.defaultPadding),
+            margin: EdgeInsets.only(top: Constants.defaultPadding),
             decoration: BoxDecoration(
               border: Border.all(
                 width: 2,
@@ -75,6 +76,7 @@ class JeepInfoCard extends StatelessWidget {
         }
         return Container(
           padding: EdgeInsets.all(Constants.defaultPadding),
+          margin: EdgeInsets.only(top: Constants.defaultPadding),
           decoration: BoxDecoration(
             border: Border.all(
               width: 2,

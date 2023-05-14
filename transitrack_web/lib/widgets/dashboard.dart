@@ -1,17 +1,10 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:transitrack_web/style/big_text.dart';
-import 'package:transitrack_web/widgets/shimmer_widget.dart';
-import '../address_finder.dart';
 import '../components/jeep_info_card.dart';
-import '../components/main_screen.dart';
-import '../components/route_info_panel_shimmer.dart';
-import '../components/route_statistics.dart';
+import '../components/route_info_chart.dart';
 import '../components/sidemenu.dart';
 import '../config/keys.dart';
 import '../config/route_coordinates.dart';
@@ -33,6 +26,7 @@ class _DashboardState extends State<Dashboard> {
   late Stream<Stream<List<JeepData>>> jeeps_snapshot;
   List<Symbol> _jeeps = [];
   List<Line> _lines = [];
+  bool isMouseHovering = false;
 
   late Stream<List<JeepData>> JeepInfo;
 
@@ -183,6 +177,10 @@ class _DashboardState extends State<Dashboard> {
                     MapboxMap(
                       accessToken: Keys.MapBoxKey,
                       styleString: Keys.MapBoxNight,
+                      zoomGesturesEnabled: !isMouseHovering,
+                      scrollGesturesEnabled: !isMouseHovering,
+                      dragEnabled: !isMouseHovering,
+                      tiltGesturesEnabled: false,
                       compassEnabled: false,
                       onMapCreated: (controller) {
                         _onMapCreated(controller);
@@ -202,133 +200,73 @@ class _DashboardState extends State<Dashboard> {
                         double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
                         double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
                         double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
-
-                        return SingleChildScrollView(
-                          padding: EdgeInsets.all(Constants.defaultPadding),
-                          child: Row(
-                            children: [
-                              Expanded(
+                        return  Row(
+                          children: [
+                            Expanded(
                                 flex: 6,
                                 child: SizedBox()
-                              ),
-                              SizedBox(width: Constants.defaultPadding),
-                              Expanded(
+                            ),
+                            SizedBox(width: Constants.defaultPadding),
+                            Expanded(
                                 flex: 2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(Constants.defaultPadding),
-                                  decoration: const BoxDecoration(
-                                    color: Constants.secondaryColor,
-                                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: MouseRegion(
+                                  onEnter: (event) {
+                                    setState((){
+                                      isMouseHovering = true;
+                                    });
+                                  },
+                                  onExit: (event) {
+                                    setState((){
+                                      isMouseHovering = false;
+                                    });
+                                  },
+                                  child: SingleChildScrollView(
+                                    physics: isMouseHovering?AlwaysScrollableScrollPhysics():NeverScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.all(Constants.defaultPadding),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(Constants.defaultPadding),
+                                      decoration: const BoxDecoration(
+                                        color: Constants.secondaryColor,
+                                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                  JeepRoutes[route_choice].name,
-                                                  style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      JeepRoutes[route_choice].name,
+                                                      style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                    ),
+                                                    Text(
+                                                      "${passenger_count} passengers",
+                                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                    ),
+                                                  ],
                                                 ),
-                                                Text(
-                                                  "${passenger_count} passengers",
-                                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                SizedBox(height: Constants.defaultPadding),
+                                                route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
+                                                ListView.builder(
+                                                  shrinkWrap: true,
+                                                  itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
+                                                  itemBuilder: (context, index) {
+                                                    return JeepInfoCard(route_choice: route_choice, data: data, index: index);
+                                                  },
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: Constants.defaultPadding),
-                                            SizedBox(
-                                              height: 200,
-                                              child: Stack(
-                                                children: [
-                                                  PieChart(
-                                                    PieChartData(
-                                                      sectionsSpace: 0,
-                                                      centerSpaceRadius: 70,
-                                                      startDegreeOffset: -90,
-                                                      sections: [
-                                                        PieChartSectionData(
-                                                          color: JeepRoutes[route_choice].color,
-                                                          value: operating,
-                                                          showTitle: false,
-                                                          radius: 25,
-                                                        ),
-                                                        PieChartSectionData(
-                                                          color: JeepRoutes[route_choice].color.withOpacity(0.1),
-                                                          value: not_operating,
-                                                          showTitle: false,
-                                                          radius: 25,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Center(
-                                                    child: Column(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      children: [
-                                                        RichText(
-                                                          textAlign: TextAlign.center,
-                                                          text: TextSpan(
-                                                            children: [
-                                                              TextSpan(
-                                                                text: '$operating',
-                                                                style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                  color: Colors.white,
-                                                                  fontWeight: FontWeight.w600,
-                                                                ),
-                                                              ),
-                                                              TextSpan(
-                                                                text: "/${operating + not_operating}",
-                                                                style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                  color: Colors.white,
-                                                                  fontWeight: FontWeight.w800,
-                                                                  fontSize: 15,
-                                                                ),
-                                                              ),
-                                                              TextSpan(
-                                                                text: '\njeeps',
-                                                                style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                  color: Colors.white,
-                                                                  fontWeight: FontWeight.w600,
-                                                                  fontSize: 15,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        SizedBox(height: Constants.defaultPadding),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            // Make this into a listview builder
-                                            ListView.builder(
-                                              shrinkWrap: true,
-                                              itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
-                                              itemBuilder: (context, index) {
-                                                  return Column(
-                                                    children: [
-                                                      SizedBox(height: Constants.defaultPadding),
-                                                      JeepInfoCard(route_choice: route_choice, data: data, index: index),
-                                                    ],
-                                                  );
-                                                }
-                                              ,
-                                            )
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 )
-                              )
-                            ],
-                          ),
+                            )
+                          ],
                         );
                       }
                     )
@@ -336,44 +274,13 @@ class _DashboardState extends State<Dashboard> {
                 ),
               ),
             ),
-            // Expanded(
-            //   flex: 6,
-            //   child: MainScreen()
-            // ),
-            // Expanded(
-            //   flex: 2,
-            //   child: Container(
-            //       width: double.infinity,
-            //       height: SizeConfig.screenHeight,
-            //       color: AppColors.primaryBg,
-            //       padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 20.0),
-            //       child: StreamBuilder(
-            //         stream: JeepInfo,
-            //         builder: (context, snapshot) {
-            //           if (!snapshot.hasData || snapshot.hasError) {
-            //             return RouteInfoPanelShimmer();
-            //           }
-            //           List<JeepData> jeepList = snapshot.data!;
-            //           return Column(
-            //             crossAxisAlignment: CrossAxisAlignment.start,
-            //             children: [
-            //               BigText(text: JeepRoutes[route_choice].name, size: 50),
-            //               SizedBox(height: 20),
-            //               RouteStatistics(jeepList: jeepList),
-            //               SizedBox(height: 20),
-            //               JeepneyStatistics(jeepList: jeepList),
-            //             ],
-            //           );
-            //         },
-            //       )
-            //   ),
-            // )
           ],
         ),
       ),
     );
   }
 }
+
 
 
 

@@ -243,7 +243,7 @@ class JeepRoute {
 List<JeepRoute> JeepRoutes = [
   JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'jeep_icons_top/ikot.png', OpHours: [8, 17]),
   JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'jeep_icons_top/toki.png', OpHours: [17, 21]),
-  JeepRoute(name: 'Katip', color: Constants.katipColor, image: 'jeep_icons_top/katip.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Katipunan', color: Constants.katipColor, image: 'jeep_icons_top/katip.png', OpHours: [8, 17]),
   JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'jeep_icons_top/katip.png', OpHours: [8, 17]),
   JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'jeep_icons_top/sm.png', OpHours: [8, 17]),
 ];
