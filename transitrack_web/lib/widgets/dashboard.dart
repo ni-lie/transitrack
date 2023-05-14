@@ -309,18 +309,8 @@ class _DashboardState extends State<Dashboard> {
                                             // Make this into a listview builder
                                             ListView.builder(
                                               shrinkWrap: true,
-                                              itemCount: data.length, // Replace with the actual item count
+                                              itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
                                               itemBuilder: (context, index) {
-
-                                                // if (data[index].is_embark) {
-                                                //   final stream =
-                                                //   var addr = "";
-                                                //   stream.listen((address) {
-                                                //    addr = address;
-                                                //   }, onError: (error) {
-                                                //     addr = "Unable to load jeepney location";
-                                                //   });
-
                                                   return Column(
                                                     children: [
                                                       Container(
@@ -347,6 +337,9 @@ class _DashboardState extends State<Dashboard> {
                                                                   StreamBuilder(
                                                                     stream: getAddressFromLatLngStream(data[index].location.latitude, data[index].location.longitude),
                                                                     builder: (context, snapshot) {
+                                                                      if(snapshot.data == null){
+                                                                        return Text("Fetching Location...", maxLines: 1, overflow: TextOverflow.ellipsis);
+                                                                      }
                                                                     return Text("${snapshot.data}", maxLines: 1, overflow: TextOverflow.ellipsis);
                                                                   }),
                                                                   Text("${data[index].passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70)),

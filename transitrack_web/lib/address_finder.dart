@@ -7,7 +7,6 @@ import 'config/keys.dart';
 Stream<String> getAddressFromLatLngStream(double latitude, double longitude) async* {
   final apiKey = Keys.GoogleMapsAPI; // Replace with your Google Maps API key
   final url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$apiKey';
-
   final response = await http.get(Uri.parse(url));
 
   if (response.statusCode == 200) {
@@ -25,8 +24,6 @@ Stream<String> getAddressFromLatLngStream(double latitude, double longitude) asy
       throw Exception('Geocoding failed: ${data['status']}');
     }
   } else {
-    throw Exception('Failed to fetch address');
+    yield 'Failed to fetch address'; // Yield an empty string if no address is found
   }
-
-  yield 'Failed to fetch address'; // Yield an empty string if no address is found
 }
