@@ -9,17 +9,18 @@ import '../models/jeep_model.dart';
 import '../style/constants.dart';
 
 class JeepInfoCard extends StatelessWidget {
-  const JeepInfoCard({
+  JeepInfoCard({
     super.key,
     required this.route_choice,
     required this.data,
     required this.index,
+    required this.isHovered,
   });
 
   final int route_choice;
   final List<JeepData> data;
   final int index;
-
+  bool isHovered;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -78,6 +79,7 @@ class JeepInfoCard extends StatelessWidget {
           padding: EdgeInsets.all(Constants.defaultPadding),
           margin: EdgeInsets.only(top: Constants.defaultPadding),
           decoration: BoxDecoration(
+            color: isHovered?Colors.white10:null,
             border: Border.all(
               width: 2,
               color: JeepRoutes[route_choice].color.withOpacity(0.15),

@@ -27,6 +27,8 @@ class _DashboardState extends State<Dashboard> {
   List<Symbol> _jeeps = [];
   List<Line> _lines = [];
   bool isMouseHovering = false;
+  bool isHoverJeep = false;
+  int hoveredJeep = -1;
 
   late Stream<List<JeepData>> JeepInfo;
 
@@ -254,7 +256,33 @@ class _DashboardState extends State<Dashboard> {
                                                   shrinkWrap: true,
                                                   itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
                                                   itemBuilder: (context, index) {
-                                                    return JeepInfoCard(route_choice: route_choice, data: data, index: index);
+                                                    return MouseRegion(
+                                                        onEnter: (event) {
+                                                          setState((){
+                                                            isHoverJeep = true;
+                                                            hoveredJeep = index;
+                                                            for (var i = 0; i < _jeeps.length; i++) {
+                                                              _mapController.updateSymbol(_jeeps[i], SymbolOptions(
+                                                                  iconOpacity: i==hoveredJeep?1:0.5,
+                                                              ));
+                                                            }
+                                                          });
+                                                        },
+                                                        onExit: (event) {
+                                                          setState((){
+                                                            isHoverJeep = false;
+                                                            hoveredJeep = index;
+                                                            for (var i = 0; i < _jeeps.length; i++) {
+                                                              _jeeps.forEach((element) {
+                                                                _mapController.updateSymbol(element, const SymbolOptions(
+                                                                  iconOpacity: 1,
+                                                                ));
+                                                              });
+                                                            }
+                                                          });
+                                                        },
+                                                        child: JeepInfoCard(route_choice: route_choice, data: data, index: index, isHovered: hoveredJeep == index && isHoverJeep,)
+                                                    );
                                                   },
                                                 ),
                                               ],
