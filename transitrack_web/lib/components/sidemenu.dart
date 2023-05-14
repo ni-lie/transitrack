@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 
 import '../config/route_coordinates.dart';
+import '../style/constants.dart';
 
 class DrawerListTile extends StatelessWidget {
   const DrawerListTile({
@@ -10,7 +11,7 @@ class DrawerListTile extends StatelessWidget {
   });
 
   final JeepRoute Route;
-  final Icon icon;
+  final Image icon;
   final ui.VoidCallback? press;
   final bool isSelected;
 
@@ -41,9 +42,10 @@ class DrawerListTile extends StatelessWidget {
     return ListTile(
       onTap: press,
       horizontalTitleGap: 0.0,
-      leading: icon,
-      title: Text(Route.name, style: const TextStyle(color: Colors.white54)),
-      subtitle: Text(formatTime(Route.OpHours), style: const TextStyle(color: Colors.white30)),
+      contentPadding: EdgeInsets.only(left: Constants.defaultPadding),
+      trailing: icon,
+      title: Text(Route.name, style: const TextStyle(color: Colors.white54), overflow: TextOverflow.ellipsis, maxLines: 1,),
+      subtitle: Text(formatTime(Route.OpHours), style: const TextStyle(color: Colors.white30), overflow: TextOverflow.ellipsis, maxLines: 1,),
       selected: isSelected,
       selectedTileColor: Colors.white10
       // selectedTileColor: Colors.blue,

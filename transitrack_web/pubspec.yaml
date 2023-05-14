@@ -71,10 +71,21 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/jeep_icons/ikot.png
-    - assets/jeep_icons/toki.png
-    - assets/jeep_icons/katip.png
-    - assets/jeep_icons/sm.png
+    - assets/jeep_icons_top/ikot.png
+    - assets/jeep_icons_top/toki.png
+    - assets/jeep_icons_top/katip.png
+    - assets/jeep_icons_top/philcoa.png
+    - assets/jeep_icons_top/sm.png
+    - assets/jeep_icons_front/ikot.png
+    - assets/jeep_icons_front/toki.png
+    - assets/jeep_icons_front/katip.png
+    - assets/jeep_icons_front/philcoa.png
+    - assets/jeep_icons_front/sm.png
+    - assets/jeep_icons_side/ikot.png
+    - assets/jeep_icons_side/toki.png
+    - assets/jeep_icons_side/katip.png
+    - assets/jeep_icons_side/philcoa.png
+    - assets/jeep_icons_side/sm.png
     - assets/waiting_shed.png
 
 

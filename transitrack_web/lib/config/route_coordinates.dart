@@ -241,9 +241,25 @@ class JeepRoute {
 }
 
 List<JeepRoute> JeepRoutes = [
-  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'jeep_icons/ikot.png', OpHours: [8, 17]),
-  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'jeep_icons/toki.png', OpHours: [17, 21]),
-  JeepRoute(name: 'Katip', color: Constants.katipColor, image: 'jeep_icons/katip.png', OpHours: [8, 17]),
-  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'jeep_icons/katip.png', OpHours: [8, 17]),
-  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'jeep_icons/sm.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'jeep_icons_top/ikot.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'jeep_icons_top/toki.png', OpHours: [17, 21]),
+  JeepRoute(name: 'Katip', color: Constants.katipColor, image: 'jeep_icons_top/katip.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'jeep_icons_top/katip.png', OpHours: [8, 17]),
+  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'jeep_icons_top/sm.png', OpHours: [8, 17]),
+];
+
+List<String> JeepFront = [
+  'jeep_icons_front/ikot.png',
+  'jeep_icons_front/toki.png',
+  'jeep_icons_front/katip.png',
+  'jeep_icons_front/philcoa.png',
+  'jeep_icons_front/sm.png',
+];
+
+List<String> JeepSide = [
+  'jeep_icons_side/ikot.png',
+  'jeep_icons_side/toki.png',
+  'jeep_icons_side/katip.png',
+  'jeep_icons_side/philcoa.png',
+  'jeep_icons_side/sm.png',
 ];

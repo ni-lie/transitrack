@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:transitrack_web/style/big_text.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
@@ -124,7 +125,7 @@ class _DashboardState extends State<Dashboard> {
                       ),
                       DrawerListTile(
                           Route: JeepRoutes[0],
-                          icon: Icon(Icons.directions_bus, color: JeepRoutes[0].color),
+                          icon: Image.asset(JeepSide[0]),
                           isSelected: route_choice == 0,
                           press: route_choice != 0? (){
                             _setRoute(0);
@@ -133,7 +134,7 @@ class _DashboardState extends State<Dashboard> {
                           } : null),
                       DrawerListTile(
                           Route: JeepRoutes[1],
-                          icon: Icon(Icons.directions_bus, color: JeepRoutes[1].color),
+                          icon: Image.asset(JeepSide[1]),
                           isSelected: route_choice == 1,
                           press: route_choice != 1? (){
                             _setRoute(1);
@@ -142,7 +143,7 @@ class _DashboardState extends State<Dashboard> {
                           } : null),
                       DrawerListTile(
                           Route: JeepRoutes[2],
-                          icon: Icon(Icons.directions_bus, color: JeepRoutes[2].color),
+                          icon: Image.asset(JeepSide[2]),
                           isSelected: route_choice == 2,
                           press: route_choice != 2? (){
                             _setRoute(2);
@@ -151,7 +152,7 @@ class _DashboardState extends State<Dashboard> {
                           } : null),
                       DrawerListTile(
                           Route: JeepRoutes[3],
-                          icon: Icon(Icons.directions_bus, color: JeepRoutes[3].color),
+                          icon: Image.asset(JeepSide[3]),
                           isSelected: route_choice == 3,
                           press: route_choice != 3? (){
                             _setRoute(3);
@@ -160,7 +161,7 @@ class _DashboardState extends State<Dashboard> {
                           } : null),
                       DrawerListTile(
                           Route: JeepRoutes[4],
-                          icon: Icon(Icons.directions_bus, color: JeepRoutes[4].color),
+                          icon: Image.asset(JeepSide[4]),
                           isSelected: route_choice == 4,
                           press: route_choice != 4? (){
                             _setRoute(4);

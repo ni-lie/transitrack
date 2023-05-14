@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 
 import '../address_finder.dart';
@@ -84,9 +85,9 @@ class JeepInfoCard extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
-                height: 20,
-                width: 20,
-                child: Icon(Icons.directions_bus, color: JeepRoutes[route_choice].color),
+                height: 40,
+                width: 40,
+                child: Image.asset(JeepFront[route_choice]),
               ),
               SizedBox(width: Constants.defaultPadding),
               Expanded(
@@ -94,7 +95,7 @@ class JeepInfoCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("${snapshot.data}", maxLines: 1, overflow: TextOverflow.ellipsis),
-                      Text("${data[index].passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70)),
+                      Text("${data[index].passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   )
               ),
