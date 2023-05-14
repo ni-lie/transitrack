@@ -13,7 +13,7 @@ class Header extends StatelessWidget {
     return Row(
       children: [
         if(!Responsive.isDesktop(context))
-        IconButton(onPressed: context.read<MenuControllers>().controlMenu, icon: Icon(Icons.menu, size: 50,)),
+        IconButton(onPressed: context.read<MenuControllers>().controlMenu, icon: Icon(Icons.menu, size: 40,)),
         if (Responsive.isMobile(context)) Spacer(flex: Responsive.isDesktop(context) ? 2:1)
       ],
     );
