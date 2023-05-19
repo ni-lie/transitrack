@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 
 import '../address_finder.dart';

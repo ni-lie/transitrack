@@ -261,7 +261,9 @@ class _DashboardState extends State<Dashboard> {
                         child: Column(
                           children: [
                             DrawerHeader(
-                                child: Icon(Icons.directions_transit)
+                                child: Image.asset(
+                                  'assets/logo.png'
+                                )
                             ),
                             DrawerListTile(
                                 Route: JeepRoutes[0],

@@ -44,6 +44,7 @@ dependencies:
   fl_chart: ^0.62.0
   flutter_switch: ^0.3.2
   shimmer: ^2.0.0
+  firebase_database: ^10.2.1
 
 
 
@@ -71,6 +72,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/logo.png
     - assets/jeep_icons_top/ikot.png
     - assets/jeep_icons_top/toki.png
     - assets/jeep_icons_top/katip.png
