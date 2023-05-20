@@ -3,8 +3,11 @@
 import 'dart:js_interop';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:transitrack_web/style/constants.dart';
+
+import '../models/heatmap_ride_model.dart';
 
 class Routes {
 
@@ -161,7 +164,10 @@ class Routes {
     LatLng(14.6535123096324,121.052838347635),
     LatLng(14.6541398506173,121.054000968372),
     LatLng(14.653976543341,121.054507362723),
-    LatLng(14.6537857122122,121.054657194759),
+    LatLng(14.6539485819635,121.054565542674),
+    LatLng(14.6542926197439,121.054867173343),
+    LatLng(14.6543246603649,121.054874333982),
+    LatLng(14.6537751825091,121.054658476469),
     LatLng(14.6535691920764,121.054169766489),
   ];
 
@@ -267,6 +273,31 @@ class Routes {
     )
   ];
 }
+
+
+List<HeatMapRideData> syntheticHeatMap = [
+  HeatMapRideData(
+      heatmap_id: 'GupdajnT8GACIloAMTer', 
+      timestamp: Timestamp(234534543534, 43543534),
+      passenger_count: 5,
+      location: GeoPoint(14.657700291994187,121.06234135892598),
+      route_id: 0
+  ),
+  HeatMapRideData(
+      heatmap_id: 'XMOgrRsgC8TbgVlmHgMT',
+      timestamp: Timestamp(234534543534, 43543534),
+      passenger_count: 2,
+      location: GeoPoint(14.652960309655244,121.06229032368765),
+      route_id: 0
+  ),
+  HeatMapRideData(
+      heatmap_id: 'ykrZsYBIu6WFuaMxV8s1',
+      timestamp: Timestamp(234534543534, 43543534),
+      passenger_count: 8,
+      location: GeoPoint(14.657595371675777,121.07432187950842),
+      route_id: 0
+  ),
+];
 
 class JeepRoute {
   String name;
