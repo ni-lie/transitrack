@@ -42,6 +42,7 @@ class _DashboardState extends State<Dashboard> {
   bool isHoverJeep = false;
   int hoveredJeep = -1;
   bool _isLoaded = false;
+  bool showPickUps = false;
 
 
   void _setRoute(int choice){
@@ -79,15 +80,6 @@ class _DashboardState extends State<Dashboard> {
       _mapController.addSymbol(jeepEntity).then((jeep) {
         _jeeps.add(jeep);
       });
-    });
-  }
-
-  void _updateHeatMapRide(List<HeatMapRideData> heatmaps) {
-    heatmaps.forEach((heatmap) {
-      _mapController.updateCircle(_heatmapCircles.firstWhere((circle) => circle.heatmap_id == heatmap.heatmap_id).data, CircleOptions(
-          geometry: LatLng(heatmap.location.latitude, heatmap.location.longitude),
-          circleOpacity: 0.08*heatmap.passenger_count
-      ));
     });
   }
 
@@ -150,31 +142,27 @@ class _DashboardState extends State<Dashboard> {
     _heatmapCircles.clear();
 
     FireStoreDataBase().fetchHeatMapRide(route_choice).listen((event) async {
-      if(event.isNotEmpty){
-        for (var element in event) {
-          bool isMatching = false;
+      for (var element in event) {
+        bool isMatching = false;
 
-          for (var heatmap in _heatmapCircles) {
-            if (heatmap.heatmap_id == element.heatmap_id) {
-              isMatching = true;
-              break;
-            }
-          }
-
-          if (isMatching == false) {
-            _mapController.addCircle(CircleOptions(
-              geometry: LatLng(element.location.latitude, element.location.longitude),
-              circleRadius: 10,
-              circleColor: '#FF0000',
-              circleOpacity: 0.05*element.passenger_count,
-            )
-            ).then((heatmap) {
-              _heatmapCircles.add(HeatMapEntity(heatmap_id: element.heatmap_id, data: heatmap));
-            });
+        for (var heatmap in _heatmapCircles) {
+          if (heatmap.heatmap_id == element.heatmap_id) {
+            isMatching = true;
+            break;
           }
         }
-      } else {
-        _updateHeatMapRide([]);
+
+        if (isMatching == false) {
+          _mapController.addCircle(CircleOptions(
+            geometry: LatLng(element.location.latitude, element.location.longitude),
+            circleRadius: showPickUps?10:0,
+            circleColor: '#FF0000',
+            circleOpacity: 0.05*element.passenger_count,
+          )
+          ).then((heatmap) {
+            _heatmapCircles.add(HeatMapEntity(heatmap_id: element.heatmap_id, data: heatmap));
+          });
+        }
       }
     });
   }
@@ -182,7 +170,7 @@ class _DashboardState extends State<Dashboard> {
 
   void _onMapCreated(MapboxMapController controller) {
     _mapController = controller;
-    Future.delayed(const Duration(seconds: 3), () async {
+    Future.delayed(const Duration(seconds: 5), () async {
       _updateRoutes();
       await _subscribeToCoordinates();
     });
@@ -333,72 +321,95 @@ class _DashboardState extends State<Dashboard> {
                       elevation: 0.0,
                       child: SingleChildScrollView(
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            DrawerHeader(
-                                child: Image.asset(
-                                  'assets/logo.png'
-                                )
+                            Column(
+                              children: [
+                                DrawerHeader(
+                                    child: Image.asset(
+                                      'assets/logo.png'
+                                    )
+                                ),
+                                DrawerListTile(
+                                    Route: JeepRoutes[0],
+                                    icon: Image.asset(JeepSide[0]),
+                                    isSelected: route_choice == 0,
+                                    press: route_choice != 0? (){
+                                      setState(() {
+                                        _isLoaded = false;
+                                      });
+                                      _setRoute(0);
+                                      _subscribeToCoordinates();
+                                      _updateRoutes();
+                                    } : null),
+                                DrawerListTile(
+                                    Route: JeepRoutes[1],
+                                    icon: Image.asset(JeepSide[1]),
+                                    isSelected: route_choice == 1,
+                                    press: route_choice != 1? (){
+                                      setState(() {
+                                        _isLoaded = false;
+                                      });
+                                      _setRoute(1);
+                                      _subscribeToCoordinates();
+                                      _updateRoutes();
+                                    } : null),
+                                DrawerListTile(
+                                    Route: JeepRoutes[2],
+                                    icon: Image.asset(JeepSide[2]),
+                                    isSelected: route_choice == 2,
+                                    press: route_choice != 2? (){
+                                      setState(() {
+                                        _isLoaded = false;
+                                      });
+                                      _setRoute(2);
+                                      _subscribeToCoordinates();
+                                      _updateRoutes();
+                                    } : null),
+                                DrawerListTile(
+                                    Route: JeepRoutes[3],
+                                    icon: Image.asset(JeepSide[3]),
+                                    isSelected: route_choice == 3,
+                                    press: route_choice != 3? (){
+                                      setState(() {
+                                        _isLoaded = false;
+                                      });
+                                      _setRoute(3);
+                                      _subscribeToCoordinates();
+                                      _updateRoutes();
+                                    } : null),
+                                DrawerListTile(
+                                    Route: JeepRoutes[4],
+                                    icon: Image.asset(JeepSide[4]),
+                                    isSelected: route_choice == 4,
+                                    press: route_choice != 4? (){
+                                      setState(() {
+                                        _isLoaded = false;
+                                      });
+                                      _setRoute(4);
+                                      _subscribeToCoordinates();
+                                      _updateRoutes();
+                                    } : null),
+                              ],
                             ),
-                            DrawerListTile(
-                                Route: JeepRoutes[0],
-                                icon: Image.asset(JeepSide[0]),
-                                isSelected: route_choice == 0,
-                                press: route_choice != 0? (){
-                                  setState(() {
-                                    _isLoaded = false;
+                            SizedBox(height: Constants.defaultPadding),
+                            GestureDetector(
+                              onTap: (){
+                                setState((){
+                                  showPickUps = !showPickUps;
+                                  _heatmapCircles.forEach((element) {
+                                    _mapController.updateCircle(element.data, CircleOptions(
+                                     circleRadius: showPickUps?10:0,
+                                    ));
                                   });
-                                  _setRoute(0);
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
-                                } : null),
-                            DrawerListTile(
-                                Route: JeepRoutes[1],
-                                icon: Image.asset(JeepSide[1]),
-                                isSelected: route_choice == 1,
-                                press: route_choice != 1? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  _setRoute(1);
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
-                                } : null),
-                            DrawerListTile(
-                                Route: JeepRoutes[2],
-                                icon: Image.asset(JeepSide[2]),
-                                isSelected: route_choice == 2,
-                                press: route_choice != 2? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  _setRoute(2);
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
-                                } : null),
-                            DrawerListTile(
-                                Route: JeepRoutes[3],
-                                icon: Image.asset(JeepSide[3]),
-                                isSelected: route_choice == 3,
-                                press: route_choice != 3? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  _setRoute(3);
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
-                                } : null),
-                            DrawerListTile(
-                                Route: JeepRoutes[4],
-                                icon: Image.asset(JeepSide[4]),
-                                isSelected: route_choice == 4,
-                                press: route_choice != 4? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  _setRoute(4);
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
-                                } : null),
+                                });
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(Constants.defaultPadding),
+                                color: Constants.bgColor,
+                                child: showPickUps?Text("Showing Pick Ups"):Text("Hiding Pick Ups"),
+                              ),
+                            )
                           ],
                         ),
                       ),
