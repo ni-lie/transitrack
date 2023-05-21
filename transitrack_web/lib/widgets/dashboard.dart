@@ -10,6 +10,7 @@ import '../MenuController.dart';
 import '../address_finder.dart';
 import '../components/header.dart';
 import '../components/heat_map_card.dart';
+import '../components/icon_and_box_widget.dart';
 import '../components/info_shimmer.dart';
 import '../components/jeep_info_card.dart';
 import '../components/pick_ups_shimmer.dart';
@@ -53,6 +54,7 @@ class _DashboardState extends State<Dashboard> {
   bool showPickUps = false;
   bool showDropOffs = false;
 
+  bool _showHeatMapTab = false;
 
   void _setRoute(int choice){
     setState(() {
@@ -109,7 +111,10 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> _subscribeToCoordinates() async {
-    _subscribeHeatMap();
+    if(_showHeatMapTab){
+      _subscribeHeatMap();
+    }
+
     List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
     _addSymbols(test);
 
@@ -246,7 +251,11 @@ class _DashboardState extends State<Dashboard> {
       _isShowingCardRide = false;
       _mapController.removeSymbol(heatMapSymbol!);
       heatMapSymbol = null;
-    };
+    }
+
+    _heatmapDropCircles.forEach((element) {_mapController.removeCircle(element.data);});
+    _heatmapRideCircles.forEach((element) {_mapController.removeCircle(element.data);});
+
     heatmapRideListener.cancel();
     heatmapDropListener.cancel();
   }
@@ -523,183 +532,224 @@ class _DashboardState extends State<Dashboard> {
                                     } : null),
                               ],
                             ),
-                            SizedBox(height: Constants.defaultPadding),
-                            Divider(),
-                            SizedBox(height: Constants.defaultPadding),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children:
-                                    [
-                                      Expanded(
-                                        flex: 3,
-                                        child: GestureDetector(
-                                          onTap: () => _selectDateStart(context),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                            decoration: const BoxDecoration(
-                                              color: Constants.primaryColor,
-                                              borderRadius: BorderRadius.all(Radius.circular(15)),
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  'Start',
-                                                  style: TextStyle(fontSize: 16),
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                ),
-                                                Text(
-                                                  _selectedDateStart.toString().substring(0, 10),
-                                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                ),
-                                              ],
-                                            ),
+                            const SizedBox(height: Constants.defaultPadding),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Expanded(child: GestureDetector(
+                                  onTap: (){
+                                    setState(() {
+                                      _showHeatMapTab = !_showHeatMapTab;
+                                    });
+                                    if(_showHeatMapTab){
+                                      _subscribeHeatMap();
+                                    } else {
+                                      _stopListenHeatMap();
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(Constants.defaultPadding),
+                                    margin: const EdgeInsets.all(Constants.defaultPadding),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        width: 2,
+                                        color: _showHeatMapTab?Colors.lightBlue:Colors.grey,
+                                      ),
+                                      borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Icon(Icons.data_usage_outlined, color: _showHeatMapTab?Colors.lightBlue:Colors.white70),
+                                            const SizedBox(width: Constants.defaultPadding),
+                                            Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70))
+                                          ],
+                                        ),
+                                        if(_showHeatMapTab)
+                                          Container(
+                                          child: Column(
+                                            children: [
+                                              SizedBox(height: Constants.defaultPadding/2),
+                                              Divider(),
+                                              SizedBox(height: Constants.defaultPadding/2),
+                                              Row(
+                                                children:
+                                                [
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: GestureDetector(
+                                                      onTap: () => _selectDateStart(context),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                        decoration: const BoxDecoration(
+                                                          color: Constants.primaryColor,
+                                                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                        ),
+                                                        child: Column(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Text(
+                                                              'Start',
+                                                              style: TextStyle(fontSize: 16),
+                                                              overflow: TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                            Text(
+                                                              _selectedDateStart.toString().substring(0, 10),
+                                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                              overflow: TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: Constants.defaultPadding),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: GestureDetector(
+                                                      onTap: () => _selectDateEnd(context),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                        decoration: const BoxDecoration(
+                                                          color: Constants.primaryColor,
+                                                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                        ),
+                                                        child: Column(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Text(
+                                                              'End',
+                                                              style: TextStyle(fontSize: 16),
+                                                              overflow: TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                            Text(
+                                                              _selectedDateEnd.toString().substring(0, 10),
+                                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                              overflow: TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: Constants.defaultPadding),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  Spacer(flex: 1),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: GestureDetector(
+                                                      onTap: (){
+                                                        setState((){
+                                                          showPickUps = !showPickUps;
+                                                          if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
+                                                            if(showPickUps){
+                                                              _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                                iconOpacity: 1,
+                                                                textOpacity: 1,
+                                                              ));
+                                                            } else {
+                                                              _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                                  iconOpacity: 0,
+                                                                  textOpacity: 0
+                                                              ));
+                                                            }
+                                                          }
+                                                          for (var element in _heatmapRideCircles) {
+                                                            _mapController.updateCircle(element.data, CircleOptions(
+                                                              circleRadius: showPickUps?10:0,
+                                                            ));
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                        decoration: BoxDecoration(
+                                                          color: showPickUps?Colors.red.withOpacity(0.3):null,
+                                                          border: Border.all(
+                                                            width: 2,
+                                                            color: showPickUps?Colors.red:Colors.white38,
+                                                          ),
+                                                          borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                        ),
+                                                        child: Text("Pick Ups", style: TextStyle(
+                                                          color: showPickUps?Colors.white:Colors.white38,
+                                                        ),
+                                                          overflow: TextOverflow.ellipsis,
+                                                          maxLines: 1,
+                                                          textAlign: TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: Constants.defaultPadding/2),
+                                                  Expanded(
+                                                    flex:3,
+                                                    child: GestureDetector(
+                                                      onTap: (){
+                                                        setState((){
+                                                          showDropOffs = !showDropOffs;
+                                                          if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
+                                                            if(showDropOffs){
+                                                              _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                                iconOpacity: 1,
+                                                                textOpacity: 1,
+                                                              ));
+                                                            } else {
+                                                              _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                                  iconOpacity: 0,
+                                                                  textOpacity: 0
+                                                              ));
+                                                            }
+                                                          }
+                                                          for (var element in _heatmapDropCircles) {
+                                                            _mapController.updateCircle(element.data, CircleOptions(
+                                                              circleRadius: showDropOffs?10:0,
+                                                            ));
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                        decoration: BoxDecoration(
+                                                          color: showDropOffs?Colors.lightGreen.withOpacity(0.3):null,
+                                                          border: Border.all(
+                                                            width: 2,
+                                                            color: showDropOffs?Colors.lightGreen:Colors.white38,
+                                                          ),
+                                                          borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                        ),
+                                                        child: Text("Drop Offs", style: TextStyle(
+                                                            color: showDropOffs?Colors.white:Colors.white38
+                                                        ),
+                                                          overflow: TextOverflow.ellipsis,
+                                                          maxLines: 1,
+                                                          textAlign: TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ),
-                                      SizedBox(width: Constants.defaultPadding),
-                                      Expanded(
-                                        flex: 3,
-                                        child: GestureDetector(
-                                          onTap: () => _selectDateEnd(context),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                            decoration: const BoxDecoration(
-                                              color: Constants.primaryColor,
-                                              borderRadius: BorderRadius.all(Radius.circular(15)),
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  'End',
-                                                  style: TextStyle(fontSize: 16),
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                ),
-                                                Text(
-                                                  _selectedDateEnd.toString().substring(0, 10),
-                                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                  overflow: TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: Constants.defaultPadding),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Spacer(flex: 1),
-                                      Expanded(
-                                        flex: 3,
-                                        child: GestureDetector(
-                                          onTap: (){
-                                            setState((){
-                                              showPickUps = !showPickUps;
-                                              if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
-                                                if(showPickUps){
-                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
-                                                    iconOpacity: 1,
-                                                    textOpacity: 1,
-                                                  ));
-                                                } else {
-                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
-                                                    iconOpacity: 0,
-                                                    textOpacity: 0
-                                                  ));
-                                                }
-                                              }
-                                              for (var element in _heatmapRideCircles) {
-                                                _mapController.updateCircle(element.data, CircleOptions(
-                                                  circleRadius: showPickUps?10:0,
-                                                ));
-                                              }
-                                            });
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                            decoration: BoxDecoration(
-                                              color: showPickUps?Colors.red.withOpacity(0.3):null,
-                                              border: Border.all(
-                                                width: 2,
-                                                color: showPickUps?Colors.red:Colors.white38,
-                                              ),
-                                              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
-                                            ),
-                                            child: Text("Pick Ups", style: TextStyle(
-                                                color: showPickUps?Colors.white:Colors.white38,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(width: Constants.defaultPadding/2),
-                                      Expanded(
-                                        flex:3,
-                                        child: GestureDetector(
-                                          onTap: (){
-                                            setState((){
-                                              showDropOffs = !showDropOffs;
-                                              if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
-                                                if(showDropOffs){
-                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
-                                                    iconOpacity: 1,
-                                                    textOpacity: 1,
-                                                  ));
-                                                } else {
-                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
-                                                      iconOpacity: 0,
-                                                      textOpacity: 0
-                                                  ));
-                                                }
-                                              }
-                                              for (var element in _heatmapDropCircles) {
-                                                _mapController.updateCircle(element.data, CircleOptions(
-                                                  circleRadius: showDropOffs?10:0,
-                                                ));
-                                              }
-                                            });
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                            decoration: BoxDecoration(
-                                              color: showDropOffs?Colors.lightGreen.withOpacity(0.3):null,
-                                              border: Border.all(
-                                                width: 2,
-                                                color: showDropOffs?Colors.lightGreen:Colors.white38,
-                                              ),
-                                              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
-                                            ),
-                                            child: Text("Drop Offs", style: TextStyle(
-                                                color: showDropOffs?Colors.white:Colors.white38
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                      ],
+                                    ),
+                                  ))
+                                )
+                              ],
                             ),
-
                           ],
                         ),
                       ),
@@ -1049,6 +1099,8 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
+
+
 
 
 
