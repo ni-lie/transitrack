@@ -276,31 +276,6 @@ class Routes {
   ];
 }
 
-
-List<HeatMapData> syntheticHeatMap = [
-  HeatMapData(
-      heatmap_id: 'GupdajnT8GACIloAMTer', 
-      timestamp: Timestamp(234534543534, 43543534),
-      passenger_count: 5,
-      location: GeoPoint(14.657700291994187,121.06234135892598),
-      route_id: 0
-  ),
-  HeatMapData(
-      heatmap_id: 'XMOgrRsgC8TbgVlmHgMT',
-      timestamp: Timestamp(234534543534, 43543534),
-      passenger_count: 2,
-      location: GeoPoint(14.652960309655244,121.06229032368765),
-      route_id: 0
-  ),
-  HeatMapData(
-      heatmap_id: 'ykrZsYBIu6WFuaMxV8s1',
-      timestamp: Timestamp(234534543534, 43543534),
-      passenger_count: 8,
-      location: GeoPoint(14.657595371675777,121.07432187950842),
-      route_id: 0
-  ),
-];
-
 class JeepRoute {
   String name;
   Color color;

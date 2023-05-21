@@ -47,6 +47,10 @@ dependencies:
   firebase_database: ^10.2.1
   connectivity: ^3.0.6
   flutter_map_marker_cluster: ^1.1.0
+  csv: ^5.0.2
+  path_provider: ^2.0.15
+  intl: ^0.18.1
+  universal_html: ^2.2.2
 
 
 
