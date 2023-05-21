@@ -12,8 +12,8 @@ class FireStoreDataBase{
     });
   }
 
-  Stream<List<HeatMapRideData>> fetchHeatMapRide(int route_id) {
-    final Query<Map<String, dynamic>> heatmapRef = FirebaseFirestore.instance.collection('heatmap_ride').where('route_id', isEqualTo: route_id);
+  Stream<List<HeatMapRideData>> fetchHeatMapRide(int route_id, Timestamp start, Timestamp end) {
+    final Query<Map<String, dynamic>> heatmapRef = FirebaseFirestore.instance.collection('heatmap_ride').where('route_id', isEqualTo: route_id).where('timestamp', isGreaterThanOrEqualTo: start).where('timestamp', isLessThanOrEqualTo: end);
     return heatmapRef.snapshots().map((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
       return querySnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
         return HeatMapRideData.fromSnapshot(doc);

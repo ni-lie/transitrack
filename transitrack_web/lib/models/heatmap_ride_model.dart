@@ -36,11 +36,11 @@ class HeatMapRideData{
 }
 
 class HeatMapEntity {
-  String heatmap_id;
+  HeatMapRideData heatmap;
   Circle data;
 
   HeatMapEntity({
-    required this.heatmap_id,
+    required this.heatmap,
     required this.data,
   });
 }
