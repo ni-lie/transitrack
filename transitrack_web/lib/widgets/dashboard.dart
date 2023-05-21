@@ -193,22 +193,29 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-  bool _isShowingCard = false;
+  bool _isShowingCardRide = false;
   LatLng? _clickedLatLng;
 
   void _onCircleTapped(Circle circle){
-    var heatmap = _heatmapRideCircles.firstWhere((element) => element.data == circle);
+    var heatmap;
+    if(circle.options.circleColor == '#FF0000'){
+      heatmap = _heatmapRideCircles.firstWhere((element) => element.data == circle);
+    } else {
+      heatmap = _heatmapDropCircles.firstWhere((element) => element.data == circle);
+    }
+
     setState((){
-      _isShowingCard = !_isShowingCard;
+      _isShowingCardRide = !_isShowingCardRide;
       _clickedLatLng = heatmap.data.options.geometry as LatLng;
     });
 
-    if(_isShowingCard){
+    if(_isShowingCardRide){
       _mapController.addSymbol(SymbolOptions(
         geometry: _clickedLatLng,
-        textField: '${heatmap.heatmap.passenger_count} Passengers Picked Up',
+        textField: (circle.options.circleColor == '#FF0000')?'${heatmap.heatmap.passenger_count} Passengers Picked Up':'${heatmap.heatmap.passenger_count} Passengers Dropped off',
         iconImage: 'assets/heatmapBanner.png',
         iconSize: 0.7,
+        textHaloWidth: circle.options.circleColor == '#FF0000'?1:-1,
         textOffset: Offset(0, -3),
         iconOffset: Offset(0, -69),
         textColor: '#FFFFFF',
@@ -223,6 +230,7 @@ class _DashboardState extends State<Dashboard> {
   void _onMapCreated(MapboxMapController controller) {
     _mapController = controller;
     _mapController.onCircleTapped.add(_onCircleTapped);
+
     Future.delayed(const Duration(seconds: 5), () async {
       _updateRoutes();
       await _subscribeToCoordinates();
@@ -234,6 +242,11 @@ class _DashboardState extends State<Dashboard> {
   DateTime _selectedDateEnd = DateTime.now();
 
   void _stopListenHeatMap(){
+    if(heatMapSymbol != null){
+      _isShowingCardRide = false;
+      _mapController.removeSymbol(heatMapSymbol!);
+      heatMapSymbol = null;
+    };
     heatmapRideListener.cancel();
     heatmapDropListener.cancel();
   }
@@ -594,6 +607,19 @@ class _DashboardState extends State<Dashboard> {
                                           onTap: (){
                                             setState((){
                                               showPickUps = !showPickUps;
+                                              if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
+                                                if(showPickUps){
+                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                    iconOpacity: 1,
+                                                    textOpacity: 1,
+                                                  ));
+                                                } else {
+                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                    iconOpacity: 0,
+                                                    textOpacity: 0
+                                                  ));
+                                                }
+                                              }
                                               for (var element in _heatmapRideCircles) {
                                                 _mapController.updateCircle(element.data, CircleOptions(
                                                   circleRadius: showPickUps?10:0,
@@ -628,6 +654,19 @@ class _DashboardState extends State<Dashboard> {
                                           onTap: (){
                                             setState((){
                                               showDropOffs = !showDropOffs;
+                                              if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
+                                                if(showDropOffs){
+                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                    iconOpacity: 1,
+                                                    textOpacity: 1,
+                                                  ));
+                                                } else {
+                                                  _mapController.updateSymbol(heatMapSymbol!, SymbolOptions(
+                                                      iconOpacity: 0,
+                                                      textOpacity: 0
+                                                  ));
+                                                }
+                                              }
                                               for (var element in _heatmapDropCircles) {
                                                 _mapController.updateCircle(element.data, CircleOptions(
                                                   circleRadius: showDropOffs?10:0,
@@ -716,7 +755,7 @@ class _DashboardState extends State<Dashboard> {
                                               doubleClickZoomEnabled: false,
                                               onMapClick: (Point<double> point, LatLng coordinates) {
                                                 setState(() {
-                                                  _isShowingCard = false;
+                                                  _isShowingCardRide = false;
                                                 });
                                               },
                                               rotateGesturesEnabled: false,

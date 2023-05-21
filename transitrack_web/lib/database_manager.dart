@@ -29,5 +29,18 @@ class FireStoreDataBase{
       }).toList();
     });
   }
+
+  Future<List<JeepData>> loadJeepsByRouteId(int routeId) async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('jeeps')
+        .where('route_id', isEqualTo: routeId)
+        .get();
+
+    List<JeepData> jeepDataList = snapshot.docs
+        .map((doc) => JeepData.fromSnapshot(doc))
+        .toList();
+
+    return jeepDataList;
+  }
 }
 
