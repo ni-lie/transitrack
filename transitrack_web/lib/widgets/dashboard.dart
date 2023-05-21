@@ -20,7 +20,7 @@ import '../config/responsive.dart';
 import '../config/route_coordinates.dart';
 import '../config/size_config.dart';
 import '../database_manager.dart';
-import '../models/heatmap_ride_model.dart';
+import '../models/heatmap_model.dart';
 import '../models/jeep_model.dart';
 import '../style/constants.dart';
 
@@ -34,12 +34,14 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late MapboxMapController _mapController;
   late StreamSubscription<List<JeepData>> jeepListener;
-  late StreamSubscription<List<HeatMapRideData>> heatmapListener;
+  late StreamSubscription<List<HeatMapData>> heatmapRideListener;
+  late StreamSubscription<List<HeatMapData>> heatmapDropListener;
   int route_choice = 0;
   late Stream<Stream<List<JeepData>>> jeeps_snapshot;
   List<Symbol> _jeeps = [];
   List<Line> _lines = [];
-  List<HeatMapEntity> _heatmapCircles = [];
+  List<HeatMapEntity> _heatmapRideCircles = [];
+  List<HeatMapEntity> _heatmapDropCircles = [];
   bool isMouseHoveringRouteInfo = false;
   bool isMouseHoveringDrawer = false;
 
@@ -49,25 +51,12 @@ class _DashboardState extends State<Dashboard> {
   int hoveredJeep = -1;
   bool _isLoaded = false;
   bool showPickUps = false;
+  bool showDropOffs = false;
 
 
   void _setRoute(int choice){
     setState(() {
       route_choice = choice;
-    });
-  }
-
-  void addHeatmapLayer(List<HeatMapRideData> heatmap) {
-    heatmap.forEach((entity) {
-      final Circle = CircleOptions(
-        geometry: LatLng(entity.location.latitude, entity.location.longitude),
-        circleRadius: 10,
-        circleColor: '#FF0000',
-        circleOpacity: 0.05*entity.passenger_count,
-      );
-      _mapController.addCircle(Circle).then((circle) {
-        _heatmapCircles.add(HeatMapEntity(heatmap: entity, data: circle));
-      });
     });
   }
 
@@ -120,7 +109,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> _subscribeToCoordinates() async {
-    _subscribeToHeatMapRide();
+    _subscribeHeatMap();
     List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
     _addSymbols(test);
 
@@ -140,17 +129,49 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-  Future<void> _subscribeToHeatMapRide() async {
-    for (var heatmap in _heatmapCircles) {
+  Future<void> _subscribeToHeatMapDrop() async {
+    for (var heatmap in _heatmapDropCircles) {
       _mapController.removeCircle(heatmap.data);
     }
-    _heatmapCircles.clear();
+    _heatmapDropCircles.clear();
 
-    heatmapListener = FireStoreDataBase().fetchHeatMapRide(route_choice, Timestamp.fromDate(_selectedDateStart), Timestamp.fromDate(_selectedDateEnd)).listen((event) async {
+    heatmapDropListener = FireStoreDataBase().fetchHeatMapDrop(route_choice, Timestamp.fromDate(_selectedDateStart), Timestamp.fromDate(_selectedDateEnd)).listen((event) async {
       for (var element in event) {
         bool isMatching = false;
 
-        for (var heatmap in _heatmapCircles) {
+        for (var heatmap in _heatmapDropCircles) {
+          if (heatmap.heatmap.heatmap_id == element.heatmap_id) {
+            isMatching = true;
+            break;
+          }
+        }
+
+        if (isMatching == false) {
+          _mapController.addCircle(CircleOptions(
+            geometry: LatLng(element.location.latitude, element.location.longitude),
+            circleRadius: showPickUps?10:0,
+            circleColor: '#00FF00',
+            circleOpacity: 0.05*element.passenger_count,
+          )
+          ).then((heatmap) {
+            _heatmapDropCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _subscribeToHeatMapRide() async {
+    for (var heatmap in _heatmapRideCircles) {
+      _mapController.removeCircle(heatmap.data);
+    }
+    _heatmapRideCircles.clear();
+
+    heatmapRideListener = FireStoreDataBase().fetchHeatMapRide(route_choice, Timestamp.fromDate(_selectedDateStart), Timestamp.fromDate(_selectedDateEnd)).listen((event) async {
+      for (var element in event) {
+        bool isMatching = false;
+
+        for (var heatmap in _heatmapRideCircles) {
           if (heatmap.heatmap.heatmap_id == element.heatmap_id) {
             isMatching = true;
             break;
@@ -165,7 +186,7 @@ class _DashboardState extends State<Dashboard> {
             circleOpacity: 0.05*element.passenger_count,
           )
           ).then((heatmap) {
-            _heatmapCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
+            _heatmapRideCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
           });
         }
       }
@@ -176,7 +197,7 @@ class _DashboardState extends State<Dashboard> {
   LatLng? _clickedLatLng;
 
   void _onCircleTapped(Circle circle){
-    var heatmap = _heatmapCircles.firstWhere((element) => element.data == circle);
+    var heatmap = _heatmapRideCircles.firstWhere((element) => element.data == circle);
     setState((){
       _isShowingCard = !_isShowingCard;
       _clickedLatLng = heatmap.data.options.geometry as LatLng;
@@ -212,6 +233,16 @@ class _DashboardState extends State<Dashboard> {
   DateTime _selectedDateStart = DateTime(2023, 5, 1, 0, 0);
   DateTime _selectedDateEnd = DateTime.now();
 
+  void _stopListenHeatMap(){
+    heatmapRideListener.cancel();
+    heatmapDropListener.cancel();
+  }
+
+  void _subscribeHeatMap(){
+    _subscribeToHeatMapRide();
+    _subscribeToHeatMapDrop();
+  }
+
   Future<void> _selectDateStart(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -223,8 +254,8 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         _selectedDateStart = picked;
       });
-      heatmapListener.cancel();
-      _subscribeToHeatMapRide();
+      _stopListenHeatMap();
+      _subscribeHeatMap();
     }
   }
 
@@ -239,8 +270,8 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         _selectedDateEnd = picked;
       });
-      heatmapListener.cancel();
-      _subscribeToHeatMapRide();
+      _stopListenHeatMap();
+      _subscribeHeatMap();
     }
   }
 
@@ -290,7 +321,7 @@ class _DashboardState extends State<Dashboard> {
                         _isLoaded = false;
                       });
                       _setRoute(0);
-                      heatmapListener.cancel();
+                      _stopListenHeatMap();
                       jeepListener.cancel();
                       _subscribeToCoordinates();
                       _updateRoutes();
@@ -304,7 +335,7 @@ class _DashboardState extends State<Dashboard> {
                         _isLoaded = false;
                       });
                       _setRoute(1);
-                      heatmapListener.cancel();
+                      _stopListenHeatMap();
                       jeepListener.cancel();
                       _subscribeToCoordinates();
                       _updateRoutes();
@@ -318,7 +349,7 @@ class _DashboardState extends State<Dashboard> {
                         _isLoaded = false;
                       });
                       _setRoute(2);
-                      heatmapListener.cancel();
+                      _stopListenHeatMap();
                       jeepListener.cancel();
                       _subscribeToCoordinates();
                       _updateRoutes();
@@ -332,7 +363,7 @@ class _DashboardState extends State<Dashboard> {
                         _isLoaded = false;
                       });
                       _setRoute(3);
-                      heatmapListener.cancel();
+                      _stopListenHeatMap();
                       jeepListener.cancel();
                       _subscribeToCoordinates();
                       _updateRoutes();
@@ -346,7 +377,7 @@ class _DashboardState extends State<Dashboard> {
                         _isLoaded = false;
                       });
                       _setRoute(4);
-                      heatmapListener.cancel();
+                      _stopListenHeatMap();
                       jeepListener.cancel();
                       _subscribeToCoordinates();
                       _updateRoutes();
@@ -416,7 +447,7 @@ class _DashboardState extends State<Dashboard> {
                                         _isLoaded = false;
                                       });
                                       _setRoute(0);
-                                      heatmapListener.cancel();
+                                      _stopListenHeatMap();
                                       jeepListener.cancel();
                                       _subscribeToCoordinates();
                                       _updateRoutes();
@@ -430,7 +461,7 @@ class _DashboardState extends State<Dashboard> {
                                         _isLoaded = false;
                                       });
                                       _setRoute(1);
-                                      heatmapListener.cancel();
+                                      _stopListenHeatMap();
                                       jeepListener.cancel();
                                       _subscribeToCoordinates();
                                       _updateRoutes();
@@ -444,7 +475,7 @@ class _DashboardState extends State<Dashboard> {
                                         _isLoaded = false;
                                       });
                                       _setRoute(2);
-                                      heatmapListener.cancel();
+                                      _stopListenHeatMap();
                                       jeepListener.cancel();
                                       _subscribeToCoordinates();
                                       _updateRoutes();
@@ -458,7 +489,7 @@ class _DashboardState extends State<Dashboard> {
                                         _isLoaded = false;
                                       });
                                       _setRoute(3);
-                                      heatmapListener.cancel();
+                                      _stopListenHeatMap();
                                       jeepListener.cancel();
                                       _subscribeToCoordinates();
                                       _updateRoutes();
@@ -472,7 +503,7 @@ class _DashboardState extends State<Dashboard> {
                                         _isLoaded = false;
                                       });
                                       _setRoute(4);
-                                      heatmapListener.cancel();
+                                      _stopListenHeatMap();
                                       jeepListener.cancel();
                                       _subscribeToCoordinates();
                                       _updateRoutes();
@@ -563,15 +594,15 @@ class _DashboardState extends State<Dashboard> {
                                           onTap: (){
                                             setState((){
                                               showPickUps = !showPickUps;
-                                              _heatmapCircles.forEach((element) {
+                                              for (var element in _heatmapRideCircles) {
                                                 _mapController.updateCircle(element.data, CircleOptions(
                                                   circleRadius: showPickUps?10:0,
                                                 ));
-                                              });
+                                              }
                                             });
                                           },
                                           child: Container(
-                                            padding: EdgeInsets.all(Constants.defaultPadding/2),
+                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
                                             decoration: BoxDecoration(
                                               color: showPickUps?Colors.red.withOpacity(0.3):null,
                                               border: Border.all(
@@ -596,26 +627,26 @@ class _DashboardState extends State<Dashboard> {
                                         child: GestureDetector(
                                           onTap: (){
                                             setState((){
-                                              showPickUps = !showPickUps;
-                                              _heatmapCircles.forEach((element) {
+                                              showDropOffs = !showDropOffs;
+                                              for (var element in _heatmapDropCircles) {
                                                 _mapController.updateCircle(element.data, CircleOptions(
-                                                  circleRadius: showPickUps?10:0,
+                                                  circleRadius: showDropOffs?10:0,
                                                 ));
-                                              });
+                                              }
                                             });
                                           },
                                           child: Container(
-                                            padding: EdgeInsets.all(Constants.defaultPadding/2),
+                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
                                             decoration: BoxDecoration(
-                                              color: showPickUps?Colors.lightGreen.withOpacity(0.3):null,
+                                              color: showDropOffs?Colors.lightGreen.withOpacity(0.3):null,
                                               border: Border.all(
                                                 width: 2,
-                                                color: showPickUps?Colors.lightGreen:Colors.white38,
+                                                color: showDropOffs?Colors.lightGreen:Colors.white38,
                                               ),
                                               borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
                                             ),
                                             child: Text("Drop Offs", style: TextStyle(
-                                                color: showPickUps?Colors.white:Colors.white38
+                                                color: showDropOffs?Colors.white:Colors.white38
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,

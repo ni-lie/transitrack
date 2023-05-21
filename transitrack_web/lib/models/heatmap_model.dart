@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 
-class HeatMapRideData{
+class HeatMapData{
   String heatmap_id;
   Timestamp timestamp;
   int passenger_count;
   GeoPoint location;
   int route_id;
 
-  HeatMapRideData({
+  HeatMapData({
     required this.heatmap_id,
     required this.timestamp,
     required this.passenger_count,
@@ -16,7 +16,7 @@ class HeatMapRideData{
     required this.route_id
   });
 
-  factory HeatMapRideData.fromSnapshot(QueryDocumentSnapshot<Object?> snapshot) {
+  factory HeatMapData.fromSnapshot(QueryDocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
 
     String heatmap_id = data['heatmap_id'];
@@ -25,7 +25,7 @@ class HeatMapRideData{
     GeoPoint location = data['location'];
     int route_id = data['route_id'];
 
-    return HeatMapRideData(
+    return HeatMapData(
         heatmap_id: heatmap_id,
         timestamp: timestamp,
         passenger_count: passenger_count,
@@ -36,7 +36,7 @@ class HeatMapRideData{
 }
 
 class HeatMapEntity {
-  HeatMapRideData heatmap;
+  HeatMapData heatmap;
   Circle data;
 
   HeatMapEntity({

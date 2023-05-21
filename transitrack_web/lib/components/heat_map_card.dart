@@ -4,7 +4,7 @@ import 'package:transitrack_web/components/pick_ups_shimmer.dart';
 
 import '../address_finder.dart';
 import '../config/route_coordinates.dart';
-import '../models/heatmap_ride_model.dart';
+import '../models/heatmap_model.dart';
 import '../style/constants.dart';
 
 class HeatMapCard extends StatelessWidget {
@@ -14,7 +14,7 @@ class HeatMapCard extends StatelessWidget {
     required this.route_choice,
   });
 
-  final HeatMapRideData heatmapData;
+  final HeatMapData heatmapData;
   final int route_choice;
 
   @override

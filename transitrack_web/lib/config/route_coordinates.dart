@@ -7,7 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:transitrack_web/style/constants.dart';
 
-import '../models/heatmap_ride_model.dart';
+import '../models/heatmap_model.dart';
 
 class Routes {
 
@@ -277,22 +277,22 @@ class Routes {
 }
 
 
-List<HeatMapRideData> syntheticHeatMap = [
-  HeatMapRideData(
+List<HeatMapData> syntheticHeatMap = [
+  HeatMapData(
       heatmap_id: 'GupdajnT8GACIloAMTer', 
       timestamp: Timestamp(234534543534, 43543534),
       passenger_count: 5,
       location: GeoPoint(14.657700291994187,121.06234135892598),
       route_id: 0
   ),
-  HeatMapRideData(
+  HeatMapData(
       heatmap_id: 'XMOgrRsgC8TbgVlmHgMT',
       timestamp: Timestamp(234534543534, 43543534),
       passenger_count: 2,
       location: GeoPoint(14.652960309655244,121.06229032368765),
       route_id: 0
   ),
-  HeatMapRideData(
+  HeatMapData(
       heatmap_id: 'ykrZsYBIu6WFuaMxV8s1',
       timestamp: Timestamp(234534543534, 43543534),
       passenger_count: 8,
