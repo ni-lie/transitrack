@@ -12,18 +12,14 @@ class JeepInfoCard extends StatelessWidget {
     super.key,
     required this.route_choice,
     required this.data,
-    required this.index,
-    required this.isHovered,
   });
 
   final int route_choice;
-  final List<JeepData> data;
-  final int index;
-  bool isHovered;
+  final JeepData data;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream: getAddressFromLatLngStream(data[index].location.latitude, data[index].location.longitude),
+        stream: getAddressFromLatLngStream(data.location.latitude, data.location.longitude),
         builder: (context, snapshot) {
           if(snapshot.data == null){
             return Container(
@@ -75,15 +71,14 @@ class JeepInfoCard extends StatelessWidget {
             );
           }
           return Container(
-            padding: EdgeInsets.all(Constants.defaultPadding),
-            margin: EdgeInsets.only(top: Constants.defaultPadding),
+            padding: const EdgeInsets.all(Constants.defaultPadding),
+            margin: const EdgeInsets.only(top: Constants.defaultPadding),
             decoration: BoxDecoration(
-              color: isHovered?Colors.white10:null,
               border: Border.all(
                 width: 2,
                 color: JeepRoutes[route_choice].color.withOpacity(0.15),
               ),
-              borderRadius: BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
             ),
             child: Row(
               children: [
@@ -92,13 +87,13 @@ class JeepInfoCard extends StatelessWidget {
                   width: 40,
                   child: Image.asset(JeepFront[route_choice]),
                 ),
-                SizedBox(width: Constants.defaultPadding),
+                const SizedBox(width: Constants.defaultPadding),
                 Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("${snapshot.data}", maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text("${data[index].passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("${data.passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )
                 ),

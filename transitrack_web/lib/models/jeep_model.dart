@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 
 class JeepData{
   String device_id;
@@ -40,4 +41,14 @@ class JeepData{
       route_id: route_id
     );
   }
+}
+
+class JeepEntity{
+  JeepData jeep;
+  Symbol data;
+
+  JeepEntity({
+   required this.jeep,
+   required this.data
+  });
 }

@@ -280,22 +280,24 @@ class JeepRoute {
   String name;
   Color color;
   String image;
+  String selectedImage;
   List<int> OpHours;
 
   JeepRoute({
     required this.name,
     required this.color,
     required this.image,
+    required this.selectedImage,
     required this.OpHours
   });
 }
 
 List<JeepRoute> JeepRoutes = [
-  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'assets/jeep_icons_top/ikot.png', OpHours: [8, 17]),
-  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'assets/jeep_icons_top/toki.png', OpHours: [17, 21]),
-  JeepRoute(name: 'Katipunan', color: Constants.katipColor, image: 'assets/jeep_icons_top/katip.png', OpHours: [8, 17]),
-  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'assets/jeep_icons_top/philcoa.png', OpHours: [8, 17]),
-  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'assets/jeep_icons_top/sm.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'assets/jeep_icons_top/ikot.png', selectedImage: 'jeep_icons_top/selected/ikot.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'assets/jeep_icons_top/toki.png', selectedImage: 'jeep_icons_top/selected/toki.png', OpHours: [17, 21]),
+  JeepRoute(name: 'Katipunan', color: Constants.katipColor, image: 'assets/jeep_icons_top/katip.png', selectedImage: 'jeep_icons_top/selected/katip.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'assets/jeep_icons_top/philcoa.png', selectedImage: 'jeep_icons_top/selected/philcoa.png', OpHours: [8, 17]),
+  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'assets/jeep_icons_top/sm.png', selectedImage: 'jeep_icons_top/selected/sm.png', OpHours: [8, 17]),
 ];
 
 List<String> JeepFront = [

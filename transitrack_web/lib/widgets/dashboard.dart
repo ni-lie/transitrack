@@ -7,16 +7,11 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 import '../MenuController.dart';
-import '../address_finder.dart';
-import '../components/firestore/download_as_table.dart';
 import '../components/firestore/download_csv.dart';
 import '../components/header.dart';
-import '../components/heat_map_card.dart';
-import '../components/icon_and_box_widget.dart';
-import '../components/info_shimmer.dart';
 import '../components/jeep_info_card.dart';
-import '../components/pick_ups_shimmer.dart';
 import '../components/route_info_chart.dart';
+import '../components/select_jeep_info.dart';
 import '../components/sidemenu.dart';
 import '../config/keys.dart';
 import '../config/responsive.dart';
@@ -41,7 +36,7 @@ class _DashboardState extends State<Dashboard> {
   late StreamSubscription<List<HeatMapData>> heatmapDropListener;
   int route_choice = 0;
   late Stream<Stream<List<JeepData>>> jeeps_snapshot;
-  List<Symbol> _jeeps = [];
+  List<JeepEntity> _jeeps = [];
   List<Line> _lines = [];
   List<HeatMapEntity> _heatmapRideCircles = [];
   List<HeatMapEntity> _heatmapDropCircles = [];
@@ -65,7 +60,10 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _addSymbols(List<JeepData> Jeepneys) {
-    Jeepneys.forEach((Jeepney) {
+    setState((){
+      isHoverJeep = false;
+    });
+    for (var Jeepney in Jeepneys) {
       double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
       double angleDegrees = angleRadians * (180 / pi);
       final jeepEntity = SymbolOptions(
@@ -76,31 +74,32 @@ class _DashboardState extends State<Dashboard> {
           textOpacity: 0,
           iconRotate: 90 - angleDegrees,
       );
-      _mapController.addSymbol(jeepEntity).then((jeep) {
-        _jeeps.add(jeep);
+      _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
+        _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
       });
-    });
+    }
   }
 
   void _updateSymbols(List<JeepData> Jeepneys) {
-    Jeepneys.forEach((Jeepney) {
+    for (var Jeepney in Jeepneys) {
       double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
       double angleDegrees = angleRadians * (180 / pi);
+      var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
       if(Jeepney.is_embark){
-        _mapController.updateSymbol(_jeeps.firstWhere((symbol) => symbol.options.textField == Jeepney.device_id), SymbolOptions(
+        _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconRotate: 90 - angleDegrees
         ));
       } else {
-        _mapController.updateSymbol(_jeeps.firstWhere((symbol) => symbol.options.textField == Jeepney.device_id), const SymbolOptions(
+        _mapController.updateSymbol(symbolToUpdate.data, const SymbolOptions(
             iconOpacity: 0
         ));
       }
-    });
+    }
   }
 
   void _updateRoutes(){
-    _mapController.removeSymbols(_jeeps);
+    _jeeps.forEach((element) {_mapController.removeSymbol(element.data);});
     _jeeps.clear();
 
     _lines.forEach((line) => _mapController.removeLine(line));
@@ -117,10 +116,10 @@ class _DashboardState extends State<Dashboard> {
       _subscribeHeatMap();
     }
 
-    List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
+    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuture(route_choice);
     _addSymbols(test);
 
-    jeepListener = FireStoreDataBase().fetchJeepData(route_choice).listen((event) async {
+    jeepListener = FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice).listen((event) async {
       if(event.isNotEmpty){
         for (var element in event) {
           if (element.route_id == route_choice){
@@ -134,6 +133,7 @@ class _DashboardState extends State<Dashboard> {
     setState(() {
       _isLoaded = true;
     });
+
   }
 
   Future<void> _subscribeToHeatMapDrop() async {
@@ -204,7 +204,7 @@ class _DashboardState extends State<Dashboard> {
   LatLng? _clickedLatLng;
 
   void _onCircleTapped(Circle circle){
-    var heatmap;
+    HeatMapEntity heatmap;
     if(circle.options.circleColor == '#FF0000'){
       heatmap = _heatmapRideCircles.firstWhere((element) => element.data == circle);
     } else {
@@ -234,11 +234,58 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  late JeepEntity pressedJeep;
+
+  void _onSymbolTapped(Symbol jeep){
+    if(isHoverJeep && pressedJeep.data != jeep){
+      setState((){
+        isHoverJeep = true;
+      });
+    } else {
+      setState((){
+        isHoverJeep = !isHoverJeep;
+      });
+    }
+
+    pressedJeep = _jeeps.firstWhere((element) => element.data == jeep);
+
+
+    if(isHoverJeep){
+      for (var element in _jeeps) {
+        if (element.jeep.device_id == pressedJeep.jeep.device_id){
+          _mapController.updateSymbol(element.data, const SymbolOptions(
+            iconSize: 0.13,
+            iconOpacity: 1
+          ));
+        } else {
+          _mapController.updateSymbol(element.data, const SymbolOptions(
+            iconSize: 0.1,
+            iconOpacity: 0.4
+          ));
+        }
+      }
+    } else {
+      for (var element in _jeeps) {
+        if (element.jeep.device_id == pressedJeep.jeep.device_id){
+          _mapController.updateSymbol(element.data, const SymbolOptions(
+            iconSize: 0.1,
+            iconOpacity: 1
+          ));
+        } else {
+          _mapController.updateSymbol(element.data, const SymbolOptions(
+            iconOpacity: 1,
+            iconSize: 0.1
+          ));
+        }
+      }
+    }
+  }
+
   void _onMapCreated(MapboxMapController controller) {
     _mapController = controller;
     _mapController.onCircleTapped.add(_onCircleTapped);
-
-    Future.delayed(const Duration(seconds: 5), () async {
+    _mapController.onSymbolTapped.add(_onSymbolTapped);
+    Future.delayed(const Duration(seconds: 3), () async {
       _updateRoutes();
       await _subscribeToCoordinates();
     });
@@ -255,14 +302,17 @@ class _DashboardState extends State<Dashboard> {
       heatMapSymbol = null;
     }
 
-    _heatmapDropCircles.forEach((element) {_mapController.removeCircle(element.data);});
-    _heatmapRideCircles.forEach((element) {_mapController.removeCircle(element.data);});
+    for (var element in _heatmapDropCircles) {_mapController.removeCircle(element.data);}
+    for (var element in _heatmapRideCircles) {_mapController.removeCircle(element.data);}
 
-    heatmapRideListener.cancel();
-    heatmapDropListener.cancel();
+    if(_showHeatMapTab){
+      heatmapRideListener.cancel();
+      heatmapDropListener.cancel();
+    }
+
   }
 
-  void _subscribeHeatMap(){
+  Future<void> _subscribeHeatMap() async {
     _subscribeToHeatMapRide();
     _subscribeToHeatMapDrop();
   }
@@ -302,7 +352,6 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
-
   }
 
   @override
@@ -974,337 +1023,316 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 Expanded(
                   flex: 5,
-                  child: Container(
-                    width: double.infinity,
-                    height: SizeConfig.screenHeight,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                            flex: 6,
-                            child: !Responsive.isMobile(context)?MouseRegion(
-                                onEnter: (event) {
-                                  setState((){
-                                    isMouseHoveringDrawer = true;
-                                  });
-                                },
-                                onExit: (event) {
-                                  setState((){
-                                    isMouseHoveringDrawer = false;
-                                  });
-                                },
-                                child: const Header()):
-                            StreamBuilder(
-                              stream: FireStoreDataBase().fetchJeepData(route_choice),
-                              builder: (context, snapshot) {
-                                if(!snapshot.hasData || snapshot.hasError){
-                                  return const SizedBox();
-                                }
-                                var data = snapshot.data!;
-                                double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
-                                double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
-                                double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
-                                return Stack(
-                                  children: [
-                                    Column(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: SizeConfig.screenHeight,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                                flex: 6,
+                                child: !Responsive.isMobile(context)?MouseRegion(
+                                    onEnter: (event) {
+                                      setState((){
+                                        isMouseHoveringDrawer = true;
+                                      });
+                                    },
+                                    onExit: (event) {
+                                      setState((){
+                                        isMouseHoveringDrawer = false;
+                                      });
+                                    },
+                                    child: const Header()):
+                                StreamBuilder(
+                                  stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
+                                  builder: (context, snapshot) {
+                                    if(!snapshot.hasData || snapshot.hasError){
+                                      return const SizedBox();
+                                    }
+                                    var data = snapshot.data!;
+                                    double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
+                                    double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
+                                    double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                    return Stack(
                                       children: [
-                                        Expanded(
-                                          flex: 71,
-                                          child: Container(
-                                            child: MapboxMap(
-                                              accessToken: Keys.MapBoxKey,
-                                              styleString: Keys.MapBoxNight,
-                                              zoomGesturesEnabled: !isMouseHoveringRouteInfo,
-                                              scrollGesturesEnabled: !isMouseHoveringRouteInfo,
-                                              doubleClickZoomEnabled: false,
-                                              dragEnabled: !isMouseHoveringRouteInfo,
-                                              minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
-                                              onMapClick: (Point<double> point, LatLng coordinates) {
-                                                setState(() {
-                                                  _isShowingCardRide = false;
-                                                });
-                                              },
-                                              rotateGesturesEnabled: false,
-                                              tiltGesturesEnabled: false,
-                                              compassEnabled: false,
-                                              onMapCreated: (controller) {
-                                                _onMapCreated(controller);
-                                              },
-                                              initialCameraPosition: CameraPosition(
-                                                target: Keys.MapCenter,
-                                                zoom: 15.0,
+                                        Column(
+                                          children: [
+                                            Expanded(
+                                              flex: 71,
+                                              child: Container(
+                                                child: MapboxMap(
+                                                  accessToken: Keys.MapBoxKey,
+                                                  styleString: Keys.MapBoxNight,
+                                                  zoomGesturesEnabled: !isMouseHoveringRouteInfo,
+                                                  scrollGesturesEnabled: !isMouseHoveringRouteInfo,
+                                                  doubleClickZoomEnabled: false,
+                                                  dragEnabled: !isMouseHoveringRouteInfo,
+                                                  minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
+                                                  onMapClick: (Point<double> point, LatLng coordinates) {
+                                                    setState(() {
+                                                      _isShowingCardRide = false;
+                                                    });
+                                                  },
+                                                  rotateGesturesEnabled: false,
+                                                  tiltGesturesEnabled: false,
+                                                  compassEnabled: false,
+                                                  onMapCreated: (controller) {
+                                                    _onMapCreated(controller);
+                                                  },
+                                                  initialCameraPosition: CameraPosition(
+                                                    target: Keys.MapCenter,
+                                                    zoom: 15.0,
+                                                  ),
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                        const Expanded(
-                                          flex: 29,
-                                          child: SizedBox(),
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      children: [
-                                        const Expanded(
-                                          flex: 70,
-                                          child: SizedBox(),
-                                        ),
-                                        Expanded(
-                                          flex: 30,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(Constants.defaultPadding),
-                                            decoration: const BoxDecoration(
-                                              color: Constants.secondaryColor,
-                                              borderRadius: BorderRadius.only(topRight: Radius.circular(15), topLeft: Radius.circular(15)),
+                                            const Expanded(
+                                              flex: 29,
+                                              child: SizedBox(),
                                             ),
-                                            child: SingleChildScrollView(
-                                                physics: const AlwaysScrollableScrollPhysics(),
-                                                child: Container(
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
+                                          ],
+                                        ),
+                                        Column(
+                                          children: [
+                                            const Expanded(
+                                              flex: 70,
+                                              child: SizedBox(),
+                                            ),
+                                            Expanded(
+                                              flex: 30,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding),
+                                                decoration: const BoxDecoration(
+                                                  color: Constants.secondaryColor,
+                                                  borderRadius: BorderRadius.only(topRight: Radius.circular(15), topLeft: Radius.circular(15)),
+                                                ),
+                                                child: SingleChildScrollView(
+                                                    physics: const AlwaysScrollableScrollPhysics(),
+                                                    child: Container(
+                                                      child: Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Row(
+                                                                  children: [
+                                                                    Expanded(
+                                                                      child: Row(
+                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                        children: [
+                                                                          Column(
+                                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                                            children: [
+                                                                              Text(
+                                                                                JeepRoutes[route_choice].name,
+                                                                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                                                                maxLines: 1,
+                                                                                overflow: TextOverflow.ellipsis,
+                                                                              ),
+                                                                              Text(
+                                                                                "${passenger_count} passengers",
+                                                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                                                textAlign: TextAlign.end,
+                                                                                maxLines: 1,
+                                                                                overflow: TextOverflow.ellipsis,
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          RichText(
+                                                                            textAlign: TextAlign.center,
+                                                                            text: TextSpan(
+                                                                              children: [
+                                                                                TextSpan(
+                                                                                  text: '$operating',
+                                                                                  style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                      color: Colors.white,
+                                                                                      fontWeight: FontWeight.w600,
+                                                                                      height: 0.5,
+                                                                                      fontSize: 20
+                                                                                  ),
+                                                                                ),
+                                                                                TextSpan(
+                                                                                  text: "/${operating + not_operating}",
+                                                                                  style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                      color: Colors.white,
+                                                                                      fontWeight: FontWeight.w800,
+                                                                                      fontSize: 14,
+                                                                                      height: 0.5
+                                                                                  ),
+                                                                                ),
+                                                                                TextSpan(
+                                                                                  text: '\njeeps',
+                                                                                  style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                    color: Colors.white54,
+                                                                                    fontWeight: FontWeight.w600,
+                                                                                    fontSize: 14,
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                // route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
+                                                                // ListView.builder(
+                                                                //   shrinkWrap: true,
+                                                                //   physics: const NeverScrollableScrollPhysics(),
+                                                                //   itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
+                                                                //   itemBuilder: (context, index) {
+                                                                //     return GestureDetector(
+                                                                //         onTap: () {
+                                                                //           if(isHoverJeep){
+                                                                //             setState((){
+                                                                //               isHoverJeep = false;
+                                                                //               for (var i = 0; i < _jeeps.length; i++) {
+                                                                //                 _mapController.updateSymbol(_jeeps[i].data, const SymbolOptions(
+                                                                //                   iconOpacity: 1,
+                                                                //                 ));
+                                                                //               }
+                                                                //             });
+                                                                //           } else {
+                                                                //             setState((){
+                                                                //               isHoverJeep = true;
+                                                                //               hoveredJeep = index;
+                                                                //               for (var i = 0; i < _jeeps.length; i++) {
+                                                                //                 _mapController.updateSymbol(_jeeps[i].data, SymbolOptions(
+                                                                //                   iconOpacity: i==hoveredJeep?1:0.5,
+                                                                //                 ));
+                                                                //               }
+                                                                //             });
+                                                                //           }
+                                                                //
+                                                                //         },
+                                                                //         child: JeepInfoCard(route_choice: route_choice, data: data, index: index, isHovered: hoveredJeep == index && isHoverJeep,)
+                                                                //     );
+                                                                //   },
+                                                                // ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    )
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const Header(),
+                                        if(!_isLoaded)
+                                          const Positioned(
+                                              top: Constants.defaultPadding,
+                                              right: Constants.defaultPadding,
+                                              child: CircularProgressIndicator()
+                                          ),
+                                      ],
+                                    );
+                                  }
+                                )
+                            ),
+                            if(!Responsive.isMobile(context))
+                              const SizedBox(width: Constants.defaultPadding),
+                            if(!Responsive.isMobile(context))
+                              Expanded(
+                                  flex: 2,
+                                  child: MouseRegion(
+                                    onEnter: (event) {
+                                      setState((){
+                                        isMouseHoveringDrawer = true;
+                                      });
+                                    },
+                                    onExit: (event) {
+                                      setState((){
+                                        isMouseHoveringDrawer = false;
+                                      });
+                                    },
+                                    child: SingleChildScrollView(
+                                      physics: const AlwaysScrollableScrollPhysics(),
+                                      child: Container(
+                                        margin: const EdgeInsets.all(Constants.defaultPadding),
+                                        decoration: const BoxDecoration(
+                                          color: Constants.secondaryColor,
+                                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                                        ),
+                                        child: StreamBuilder(
+                                            stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
+                                            builder: (context, snapshot) {
+                                              if (!snapshot.hasData || snapshot.hasError) {
+                                                return ShimmerWidget(height: 500,);
+                                              }
+                                              var data = snapshot.data!;
+                                              double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
+                                              double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
+                                              double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                              return Container(
+                                                decoration: const BoxDecoration(
+                                                  color: Constants.secondaryColor,
+                                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: SingleChildScrollView(
+                                                        physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
+                                                        padding: const EdgeInsets.all(Constants.defaultPadding),
                                                         child: Column(
                                                           crossAxisAlignment: CrossAxisAlignment.start,
                                                           children: [
                                                             Row(
                                                               children: [
                                                                 Expanded(
-                                                                  child: Row(
-                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                    children: [
-                                                                      Column(
-                                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                                        children: [
-                                                                          Text(
-                                                                            JeepRoutes[route_choice].name,
-                                                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                                                                            maxLines: 1,
-                                                                            overflow: TextOverflow.ellipsis,
-                                                                          ),
-                                                                          Text(
-                                                                            "${passenger_count} passengers",
-                                                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                            textAlign: TextAlign.end,
-                                                                            maxLines: 1,
-                                                                            overflow: TextOverflow.ellipsis,
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                      RichText(
-                                                                        textAlign: TextAlign.center,
-                                                                        text: TextSpan(
-                                                                          children: [
-                                                                            TextSpan(
-                                                                              text: '$operating',
-                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                                  color: Colors.white,
-                                                                                  fontWeight: FontWeight.w600,
-                                                                                  height: 0.5,
-                                                                                  fontSize: 20
-                                                                              ),
-                                                                            ),
-                                                                            TextSpan(
-                                                                              text: "/${operating + not_operating}",
-                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                                  color: Colors.white,
-                                                                                  fontWeight: FontWeight.w800,
-                                                                                  fontSize: 14,
-                                                                                  height: 0.5
-                                                                              ),
-                                                                            ),
-                                                                            TextSpan(
-                                                                              text: '\njeeps',
-                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                                color: Colors.white54,
-                                                                                fontWeight: FontWeight.w600,
-                                                                                fontSize: 14,
-                                                                              ),
-                                                                            ),
-                                                                          ],
-                                                                        ),
-                                                                      ),
-                                                                    ],
+                                                                  child: Text(
+                                                                    JeepRoutes[route_choice].name,
+                                                                    style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                                    maxLines: 1,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    "${passenger_count} passengers",
+                                                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                                    textAlign: TextAlign.end,
+                                                                    maxLines: 2,
+                                                                    overflow: TextOverflow.ellipsis,
                                                                   ),
                                                                 ),
                                                               ],
                                                             ),
-                                                            // route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
-                                                            ListView.builder(
-                                                              shrinkWrap: true,
-                                                              physics: const NeverScrollableScrollPhysics(),
-                                                              itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
-                                                              itemBuilder: (context, index) {
-                                                                return GestureDetector(
-                                                                    onTap: () {
-                                                                      if(isHoverJeep){
-                                                                        setState((){
-                                                                          isHoverJeep = false;
-                                                                          for (var i = 0; i < _jeeps.length; i++) {
-                                                                            _mapController.updateSymbol(_jeeps[i], const SymbolOptions(
-                                                                              iconOpacity: 1,
-                                                                            ));
-                                                                          }
-                                                                        });
-                                                                      } else {
-                                                                        setState((){
-                                                                          isHoverJeep = true;
-                                                                          hoveredJeep = index;
-                                                                          for (var i = 0; i < _jeeps.length; i++) {
-                                                                            _mapController.updateSymbol(_jeeps[i], SymbolOptions(
-                                                                              iconOpacity: i==hoveredJeep?1:0.5,
-                                                                            ));
-                                                                          }
-                                                                        });
-                                                                      }
-
-                                                                    },
-                                                                    child: JeepInfoCard(route_choice: route_choice, data: data, index: index, isHovered: hoveredJeep == index && isHoverJeep,)
-                                                                );
-                                                              },
-                                                            ),
+                                                            const SizedBox(height: Constants.defaultPadding),
+                                                            route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
+                                                            const SizedBox(height: Constants.defaultPadding),
+                                                            const Divider(),
+                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
                                                           ],
                                                         ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                )
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const Header(),
-                                    if(!_isLoaded)
-                                      const Positioned(
-                                          top: Constants.defaultPadding,
-                                          right: Constants.defaultPadding,
-                                          child: CircularProgressIndicator()
-                                      ),
-                                  ],
-                                );
-                              }
-                            )
-                        ),
-                        if(!Responsive.isMobile(context))
-                          const SizedBox(width: Constants.defaultPadding),
-                        if(!Responsive.isMobile(context))
-                          Expanded(
-                              flex: 2,
-                              child: MouseRegion(
-                                onEnter: (event) {
-                                  setState((){
-                                    isMouseHoveringDrawer = true;
-                                  });
-                                },
-                                onExit: (event) {
-                                  setState((){
-                                    isMouseHoveringDrawer = false;
-                                  });
-                                },
-                                child: SingleChildScrollView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  child: Container(
-                                    margin: const EdgeInsets.all(Constants.defaultPadding),
-                                    decoration: const BoxDecoration(
-                                      color: Constants.secondaryColor,
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                    ),
-                                    child: StreamBuilder(
-                                        stream: FireStoreDataBase().fetchJeepData(route_choice),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData || snapshot.hasError) {
-                                            return ShimmerWidget(height: 500,);
-                                          }
-                                          var data = snapshot.data!;
-                                          double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
-                                          double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
-                                          double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
-                                          return Container(
-                                            decoration: const BoxDecoration(
-                                              color: Constants.secondaryColor,
-                                              borderRadius: BorderRadius.all(Radius.circular(10)),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: SingleChildScrollView(
-                                                    physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
-                                                    padding: const EdgeInsets.all(Constants.defaultPadding),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Expanded(
-                                                              child: Text(
-                                                                JeepRoutes[route_choice].name,
-                                                                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                                                                maxLines: 1,
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Text(
-                                                                "${passenger_count} passengers",
-                                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                textAlign: TextAlign.end,
-                                                                maxLines: 2,
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(height: Constants.defaultPadding),
-                                                        route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
-                                                        ListView.builder(
-                                                          shrinkWrap: true,
-                                                          itemCount: data.where((element) => element.is_embark).length, // Replace with the actual item count
-                                                          itemBuilder: (context, index) {
-                                                            return MouseRegion(
-                                                                onEnter: (event) {
-                                                                  setState((){
-                                                                    isHoverJeep = true;
-                                                                    hoveredJeep = index;
-                                                                    for (var i = 0; i < _jeeps.length; i++) {
-                                                                      _mapController.updateSymbol(_jeeps[i], SymbolOptions(
-                                                                        iconOpacity: i==hoveredJeep?1:0.5,
-                                                                      ));
-                                                                    }
-                                                                  });
-                                                                },
-                                                                onExit: (event) {
-                                                                  setState((){
-                                                                    isHoverJeep = false;
-                                                                    hoveredJeep = index;
-                                                                    for (var i = 0; i < _jeeps.length; i++) {
-                                                                      _jeeps.forEach((element) {
-                                                                        _mapController.updateSymbol(element, const SymbolOptions(
-                                                                          iconOpacity: 1,
-                                                                        ));
-                                                                      });
-                                                                    }
-                                                                  });
-                                                                },
-                                                                child: JeepInfoCard(route_choice: route_choice, data: data, index: index, isHovered: hoveredJeep == index && isHoverJeep,)
-                                                            );
-                                                          },
-                                                        ),
-                                                      ],
                                                     ),
-                                                  ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        }
-
+                                              );
+                                            }
+                                        ),
+                                      )
                                     ),
-                                  )
-                                ),
-                              ),
-                          )
-                      ],
-                    )
+                                  ),
+                              )
+                          ],
+                        )
+                      ),
+                      if(!_isLoaded)
+                        const Positioned(
+                            top: Constants.defaultPadding,
+                            left: Constants.defaultPadding,
+                            child: CircularProgressIndicator()
+                        ),
+                    ],
                   ),
                 ),
               ],
