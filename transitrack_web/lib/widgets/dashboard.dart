@@ -13,6 +13,7 @@ import '../components/firestore/download_historical_jeep_csv.dart';
 import '../components/header.dart';
 import '../components/jeep_info_card.dart';
 import '../components/route_info_chart.dart';
+import '../components/route_info_panel_shimmer_v2.dart';
 import '../components/select_jeep_info.dart';
 import '../components/sidemenu.dart';
 import '../config/keys.dart';
@@ -57,6 +58,8 @@ class _DashboardState extends State<Dashboard> {
   bool _showJeepHistoryTab = false;
   bool _isListeningJeep = false;
 
+  bool _mobileDrawerOpen = false;
+  
   void _setRoute(int choice){
     setState(() {
       route_choice = choice;
@@ -89,7 +92,7 @@ class _DashboardState extends State<Dashboard> {
       double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
       double angleDegrees = angleRadians * (180 / pi);
       var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
-      if(Jeepney.is_embark){
+      if(Jeepney.is_active){
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconRotate: 90 - angleDegrees
@@ -764,6 +767,209 @@ class _DashboardState extends State<Dashboard> {
                     )
                   ],
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(child: GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            _showJeepHistoryTab = !_showJeepHistoryTab;
+                          });
+                          if(_showJeepHistoryTab){
+                            _stopListenJeep();
+                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+                            _addSymbols(test);
+                          } else {
+                            for (var element in _jeeps) {
+                              _mapController.removeSymbol(element.data);
+                            }
+                            _jeeps.clear();
+                            _subscribeToCoordinates();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(Constants.defaultPadding),
+                          margin:  const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              width: 2,
+                              color: _showJeepHistoryTab?Colors.lightBlue:Colors.grey,
+                            ),
+                            borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const Divider(),
+                                  Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
+                                  const SizedBox(width: Constants.defaultPadding),
+                                  Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
+                                  Spacer(),
+                                  if(_showJeepHistoryTab)
+                                    DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
+                                ],
+                              ),
+                              if(_showJeepHistoryTab)
+                                Container(
+                                  child: Column(
+                                    children: [
+                                      const SizedBox(height: Constants.defaultPadding/2),
+                                      const Divider(),
+                                      const SizedBox(height: Constants.defaultPadding/2),
+                                      Row(
+                                        children:
+                                        [
+                                          Expanded(
+                                            flex: 3,
+                                            child: GestureDetector(
+                                              onTap: () => _selectDateTime(context),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                decoration: const BoxDecoration(
+                                                  color: Constants.primaryColor,
+                                                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                ),
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    const Text(
+                                                      'Set Time',
+                                                      style: TextStyle(fontSize: 16),
+                                                      overflow: TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                    ),
+                                                    Text(
+                                                      DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTimeAnalysis).toString(),
+                                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                      overflow: TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: Constants.defaultPadding),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Expanded(
+                                            flex: 5,
+                                            child: GestureDetector(
+                                              onTap: (){
+                                                _addSeconds(30, false);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding/4),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    width: 2,
+                                                    color: Colors.lightBlue,
+                                                  ),
+                                                  borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                ),
+                                                child: const Text("-30s", style: TextStyle(
+                                                  color:Colors.lightBlue,
+                                                ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Expanded(
+                                            flex:5,
+                                            child: GestureDetector(
+                                              onTap: (){
+                                                _addSeconds(5, false);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding/4),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    width: 2,
+                                                    color: Colors.lightBlue,
+                                                  ),
+                                                  borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                ),
+                                                child: const Text("-5s", style: TextStyle(
+                                                  color: Colors.lightBlue,
+                                                ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Expanded(
+                                            flex:5,
+                                            child: GestureDetector(
+                                              onTap: (){
+                                                _addSeconds(5, true);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding/4),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    width: 2,
+                                                    color: Colors.lightBlue,
+                                                  ),
+                                                  borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                ),
+                                                child: const Text("+5s", style: TextStyle(
+                                                  color: Colors.lightBlue,
+                                                ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Expanded(
+                                            flex: 5,
+                                            child: GestureDetector(
+                                              onTap: (){
+                                                _addSeconds(30, true);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding/4),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    width: 2,
+                                                    color: Colors.lightBlue,
+                                                  ),
+                                                  borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                ),
+                                                child: const Text("+30s", style: TextStyle(
+                                                  color: Colors.lightBlue,
+                                                ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        )))
+                  ],
+                ),
               ],
             ),
           ),
@@ -1347,29 +1553,19 @@ class _DashboardState extends State<Dashboard> {
                                         isMouseHoveringDrawer = false;
                                       });
                                     },
-                                    child: const Header()):
-                                StreamBuilder(
-                                  stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
-                                  builder: (context, snapshot) {
-                                    if(!snapshot.hasData || snapshot.hasError){
-                                      return const SizedBox();
-                                    }
-                                    var data = snapshot.data!;
-                                    double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
-                                    double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
-                                    double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
-                                    return Stack(
+                                    child: const Header())
+                                :Container(
+                                    child: Stack(
                                       children: [
                                         Column(
                                           children: [
-                                            Expanded(
-                                              child: MapboxMap(
+                                          Expanded(child: MapboxMap(
                                                 accessToken: Keys.MapBoxKey,
                                                 styleString: Keys.MapBoxNight,
-                                                zoomGesturesEnabled: !context.read<MenuControllers>().scaffoldKey.currentState!.isDrawerOpen,
-                                                scrollGesturesEnabled: !context.read<MenuControllers>().scaffoldKey.currentState!.isDrawerOpen,
+                                                zoomGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? false),
+                                                scrollGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? false),
                                                 doubleClickZoomEnabled: false,
-                                                dragEnabled: !context.read<MenuControllers>().scaffoldKey.currentState!.isDrawerOpen,
+                                                dragEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? false),
                                                 minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
                                                 onMapClick: (Point<double> point, LatLng coordinates) {
                                                   setState(() {
@@ -1386,96 +1582,197 @@ class _DashboardState extends State<Dashboard> {
                                                   target: Keys.MapCenter,
                                                   zoom: 15.0,
                                                 ),
-                                              ),
+                                              )),
+                                          Container(
+                                            padding: const EdgeInsets.all(Constants.defaultPadding),
+                                            height: 220,
+                                            decoration: const BoxDecoration(
+                                              color: Constants.secondaryColor,
                                             ),
-                                            Container(
-                                              padding: const EdgeInsets.all(Constants.defaultPadding),
-                                              decoration: const BoxDecoration(
-                                                color: Constants.secondaryColor,
-                                              ),
-                                              child: SingleChildScrollView(
-                                                  physics: const NeverScrollableScrollPhysics(),
-                                                  child: Container(
-                                                    child: Row(
-                                                      children: [
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                    child: Row(
-                                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                      children: [
-                                                                        Column(
-                                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                            child: _showJeepHistoryTab
+                                            ?FutureBuilder(
+                                                future: FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                                builder: (context, snapshot){
+                                                  if(!snapshot.hasData || snapshot.hasError){
+                                                    return const RouteInfoShimmerV2();
+                                                  }
+                                                  var data = snapshot.data!;
+                                                  double operating = data.where((jeep) => jeep.is_active).length.toDouble();
+                                                  double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                                  double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                                  return Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                Expanded(
+                                                                  child: Row(
+                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                    children: [
+                                                                      Column(
+                                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                                        children: [
+                                                                          Text(
+                                                                            JeepRoutes[route_choice].name,
+                                                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                                                            maxLines: 1,
+                                                                            overflow: TextOverflow.ellipsis,
+                                                                          ),
+                                                                          Text(
+                                                                            "${passenger_count} total passengers",
+                                                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                                            textAlign: TextAlign.end,
+                                                                            maxLines: 1,
+                                                                            overflow: TextOverflow.ellipsis,
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      RichText(
+                                                                        textAlign: TextAlign.center,
+                                                                        text: TextSpan(
                                                                           children: [
-                                                                            Text(
-                                                                              JeepRoutes[route_choice].name,
-                                                                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                                                                              maxLines: 1,
-                                                                              overflow: TextOverflow.ellipsis,
+                                                                            TextSpan(
+                                                                              text: '$operating',
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                  color: Colors.white,
+                                                                                  fontWeight: FontWeight.w600,
+                                                                                  height: 0.5,
+                                                                                  fontSize: 20
+                                                                              ),
                                                                             ),
-                                                                            Text(
-                                                                              "${passenger_count} total passengers",
-                                                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                              textAlign: TextAlign.end,
-                                                                              maxLines: 1,
-                                                                              overflow: TextOverflow.ellipsis,
+                                                                            TextSpan(
+                                                                              text: "/${operating + not_operating}",
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                  color: Colors.white,
+                                                                                  fontWeight: FontWeight.w800,
+                                                                                  fontSize: 14,
+                                                                                  height: 0.5
+                                                                              ),
+                                                                            ),
+                                                                            TextSpan(
+                                                                              text: '\njeeps',
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white54,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                fontSize: 14,
+                                                                              ),
                                                                             ),
                                                                           ],
                                                                         ),
-                                                                        RichText(
-                                                                          textAlign: TextAlign.center,
-                                                                          text: TextSpan(
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            const SizedBox(height: Constants.defaultPadding),
+                                                            const Divider(),
+                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                }
+                                            )
+                                            :StreamBuilder(
+                                                stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
+                                                builder: (context, snapshot) {
+                                                  if(!snapshot.hasData || snapshot.hasError){
+                                                    return const RouteInfoShimmerV2();
+                                                  }
+                                                  var data = snapshot.data!;
+                                                  double operating = data.where((jeep) => jeep.is_active).length.toDouble();
+                                                  double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                                  double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                                  return Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                Expanded(
+                                                                  child: Row(
+                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                    children: [
+                                                                      Column(
+                                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                                        children: [
+                                                                          Row(
+                                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                             children: [
-                                                                              TextSpan(
-                                                                                text: '$operating',
-                                                                                style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                                    color: Colors.white,
-                                                                                    fontWeight: FontWeight.w600,
-                                                                                    height: 0.5,
-                                                                                    fontSize: 20
-                                                                                ),
-                                                                              ),
-                                                                              TextSpan(
-                                                                                text: "/${operating + not_operating}",
-                                                                                style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                                    color: Colors.white,
-                                                                                    fontWeight: FontWeight.w800,
-                                                                                    fontSize: 14,
-                                                                                    height: 0.5
-                                                                                ),
-                                                                              ),
-                                                                              TextSpan(
-                                                                                text: '\njeeps',
-                                                                                style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                                  color: Colors.white54,
-                                                                                  fontWeight: FontWeight.w600,
-                                                                                  fontSize: 14,
-                                                                                ),
+                                                                              Text(
+                                                                                JeepRoutes[route_choice].name,
+                                                                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                                                                maxLines: 1,
+                                                                                overflow: TextOverflow.ellipsis,
                                                                               ),
                                                                             ],
                                                                           ),
+                                                                          Text(
+                                                                            "${passenger_count} total passengers",
+                                                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                                            textAlign: TextAlign.end,
+                                                                            maxLines: 1,
+                                                                            overflow: TextOverflow.ellipsis,
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      RichText(
+                                                                        textAlign: TextAlign.center,
+                                                                        text: TextSpan(
+                                                                          children: [
+                                                                            TextSpan(
+                                                                              text: '$operating',
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                  color: Colors.white,
+                                                                                  fontWeight: FontWeight.w600,
+                                                                                  height: 0.5,
+                                                                                  fontSize: 20
+                                                                              ),
+                                                                            ),
+                                                                            TextSpan(
+                                                                              text: "/${operating + not_operating}",
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                  color: Colors.white,
+                                                                                  fontWeight: FontWeight.w800,
+                                                                                  fontSize: 14,
+                                                                                  height: 0.5
+                                                                              ),
+                                                                            ),
+                                                                            TextSpan(
+                                                                              text: '\njeeps',
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white54,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                fontSize: 14,
+                                                                              ),
+                                                                            ),
+                                                                          ],
                                                                         ),
-                                                                      ],
-                                                                    ),
+                                                                      ),
+                                                                    ],
                                                                   ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(height: Constants.defaultPadding),
-                                                              const Divider(),
-                                                              isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
-                                                            ],
-                                                          ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            const SizedBox(height: Constants.defaultPadding),
+                                                            const Divider(),
+                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                          ],
                                                         ),
-                                                      ],
-                                                    ),
-                                                  )
-                                              ),
-                                            ),
-                                          ],
+                                                      ),
+                                                    ],
+                                                  );
+                                                }
+                                            )
+                                          )
+                                        ]
                                         ),
                                         const Header(),
                                         if(!_isLoaded && !_showJeepHistoryTab)
@@ -1484,10 +1781,9 @@ class _DashboardState extends State<Dashboard> {
                                               right: Constants.defaultPadding,
                                               child: CircularProgressIndicator()
                                           ),
-                                      ],
-                                    );
-                                  }
-                                )
+                                      ]
+                                    )
+                                ),
                             ),
                             if(!Responsive.isMobile(context))
                               const SizedBox(width: Constants.defaultPadding),
@@ -1513,15 +1809,75 @@ class _DashboardState extends State<Dashboard> {
                                           color: Constants.secondaryColor,
                                           borderRadius: BorderRadius.all(Radius.circular(10)),
                                         ),
-                                        child: StreamBuilder(
+                                        child: _showJeepHistoryTab
+                                          ?FutureBuilder(
+                                          future: FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData || snapshot.hasError) {
+                                              return ShimmerWidget(height: 500,);
+                                            }
+                                            var data = snapshot.data!;
+                                            double operating = data.where((jeep) => jeep.is_active).length.toDouble();
+                                            double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                            double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                            return Container(
+                                              decoration: const BoxDecoration(
+                                                color: Constants.secondaryColor,
+                                                borderRadius: BorderRadius.all(Radius.circular(10)),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: SingleChildScrollView(
+                                                      physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
+                                                      padding: const EdgeInsets.all(Constants.defaultPadding),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: Text(
+                                                                  JeepRoutes[route_choice].name,
+                                                                  style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                                  maxLines: 1,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                              ),
+                                                              Expanded(
+                                                                child: Text(
+                                                                  "${passenger_count} total passengers",
+                                                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
+                                                                  textAlign: TextAlign.end,
+                                                                  maxLines: 2,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: Constants.defaultPadding),
+                                                          route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
+                                                          const SizedBox(height: Constants.defaultPadding),
+                                                          const Divider(),
+                                                          isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }
+                                        )
+                                          :StreamBuilder(
                                             stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
                                             builder: (context, snapshot) {
                                               if (!snapshot.hasData || snapshot.hasError) {
                                                 return ShimmerWidget(height: 500,);
                                               }
                                               var data = snapshot.data!;
-                                              double operating = data.where((jeep) => jeep.is_embark).length.toDouble();
-                                              double not_operating = data.where((jeep) => !jeep.is_embark).length.toDouble();
+                                              double operating = data.where((jeep) => jeep.is_active).length.toDouble();
+                                              double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
                                               double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
                                               return Container(
                                                 decoration: const BoxDecoration(
@@ -1596,6 +1952,8 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
+
+
 
 
 
