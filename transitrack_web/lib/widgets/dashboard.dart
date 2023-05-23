@@ -8,7 +8,8 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 import '../MenuController.dart';
-import '../components/firestore/download_csv.dart';
+import '../components/firestore/download_heatmap_csv.dart';
+import '../components/firestore/download_historical_jeep_csv.dart';
 import '../components/header.dart';
 import '../components/jeep_info_card.dart';
 import '../components/route_info_chart.dart';
@@ -658,7 +659,7 @@ class _DashboardState extends State<Dashboard> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                        DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
                                         const Spacer(),
                                         Expanded(
                                           flex: 5,
@@ -927,7 +928,7 @@ class _DashboardState extends State<Dashboard> {
                                               Expanded(child: Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
                                               Spacer(),
                                               if(_showHeatMapTab)
-                                              DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                              DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
                                             ],
                                           ),
                                           if(_showHeatMapTab)
@@ -1155,7 +1156,7 @@ class _DashboardState extends State<Dashboard> {
                                               Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
                                               Spacer(),
                                               if(_showJeepHistoryTab)
-                                                DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                                DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
                                             ],
                                           ),
                                           if(_showJeepHistoryTab)
@@ -1477,7 +1478,7 @@ class _DashboardState extends State<Dashboard> {
                                           ],
                                         ),
                                         const Header(),
-                                        if(!_isLoaded)
+                                        if(!_isLoaded && !_showJeepHistoryTab)
                                           const Positioned(
                                               top: Constants.defaultPadding,
                                               right: Constants.defaultPadding,
@@ -1578,7 +1579,7 @@ class _DashboardState extends State<Dashboard> {
                           ],
                         )
                       ),
-                      if(!_isLoaded && !Responsive.isMobile(context))
+                      if(!_isLoaded && !Responsive.isMobile(context) && !_showJeepHistoryTab)
                         const Positioned(
                             top: Constants.defaultPadding,
                             left: Constants.defaultPadding,

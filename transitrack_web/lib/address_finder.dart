@@ -27,3 +27,27 @@ Stream<String> getAddressFromLatLngStream(double latitude, double longitude) asy
     yield 'Failed to fetch address'; // Yield an empty string if no address is found
   }
 }
+
+Future<String> getAddressFromLatLngFuture(double latitude, double longitude) async {
+  final apiKey = Keys.GoogleMapsAPI; // Replace with your Google Maps API key
+  final url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$apiKey';
+  final response = await http.get(Uri.parse(url));
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    if (data['status'] == 'OK') {
+      List<dynamic> results = data['results'];
+      if (results.isNotEmpty) {
+        String formattedAddress = results[0]['formatted_address'];
+        List<String> addressComponents = formattedAddress.split(',');
+        if (addressComponents.length >= 2) {
+          return addressComponents.sublist(0, 2).join(', ');
+        }
+      }
+    } else {
+      throw Exception('Geocoding failed: ${data['status']}');
+    }
+  }
+
+  return 'Failed to fetch address'; // Return an empty string if no address is found
+}
