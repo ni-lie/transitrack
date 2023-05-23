@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
@@ -52,6 +53,8 @@ class _DashboardState extends State<Dashboard> {
   bool showDropOffs = false;
 
   bool _showHeatMapTab = false;
+  bool _showJeepHistoryTab = false;
+  bool _isListeningJeep = false;
 
   void _setRoute(int choice){
     setState(() {
@@ -111,29 +114,41 @@ class _DashboardState extends State<Dashboard> {
 
   }
 
+
   Future<void> _subscribeToCoordinates() async {
     if(_showHeatMapTab){
       _subscribeHeatMap();
     }
 
-    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuture(route_choice);
-    _addSymbols(test);
-
-    jeepListener = FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice).listen((event) async {
-      if(event.isNotEmpty){
-        for (var element in event) {
-          if (element.route_id == route_choice){
-            _updateSymbols(event);
-          }
-        }
-      } else {
-        _updateSymbols([]);
+    if(_showJeepHistoryTab){
+      for (var element in _jeeps) {
+        _mapController.removeSymbol(element.data);
       }
-    });
-    setState(() {
-      _isLoaded = true;
-    });
+      _jeeps.clear();
 
+      List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+      _addSymbols(test);
+    } else {
+      List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuture(route_choice);
+      _addSymbols(test);
+
+      jeepListener = FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice).listen((event) async {
+        if(event.isNotEmpty){
+          for (var element in event) {
+            if (element.route_id == route_choice){
+              _updateSymbols(event);
+            }
+          }
+        } else {
+          _updateSymbols([]);
+        }
+      });
+
+      _isListeningJeep = true;
+      setState(() {
+        _isLoaded = true;
+      });
+    }
   }
 
   Future<void> _subscribeToHeatMapDrop() async {
@@ -142,7 +157,7 @@ class _DashboardState extends State<Dashboard> {
     }
     _heatmapDropCircles.clear();
 
-    heatmapDropListener = FireStoreDataBase().fetchHeatMapDrop(route_choice, Timestamp.fromDate(_selectedDateStart), Timestamp.fromDate(_selectedDateEnd)).listen((event) async {
+    heatmapDropListener = FireStoreDataBase().fetchHeatMapDrop(route_choice, Timestamp.fromDate(_selectedDateStartHeatMap), Timestamp.fromDate(_selectedDateEndHeatMap)).listen((event) async {
       for (var element in event) {
         bool isMatching = false;
 
@@ -174,7 +189,7 @@ class _DashboardState extends State<Dashboard> {
     }
     _heatmapRideCircles.clear();
 
-    heatmapRideListener = FireStoreDataBase().fetchHeatMapRide(route_choice, Timestamp.fromDate(_selectedDateStart), Timestamp.fromDate(_selectedDateEnd)).listen((event) async {
+    heatmapRideListener = FireStoreDataBase().fetchHeatMapRide(route_choice, Timestamp.fromDate(_selectedDateStartHeatMap), Timestamp.fromDate(_selectedDateEndHeatMap)).listen((event) async {
       for (var element in event) {
         bool isMatching = false;
 
@@ -292,8 +307,19 @@ class _DashboardState extends State<Dashboard> {
 
   }
 
-  DateTime _selectedDateStart = DateTime(2023, 5, 1, 0, 0);
-  DateTime _selectedDateEnd = DateTime.now();
+  DateTime _selectedDateStartHeatMap = DateTime(2023, 5, 1, 0, 0);
+  DateTime _selectedDateEndHeatMap = DateTime.now();
+
+  void _stopListenJeep(){
+    if(_isListeningJeep){
+      jeepListener.cancel();
+      _isListeningJeep = false;
+    }
+    for (var element in _jeeps) {
+      _mapController.removeSymbol(element.data);
+    }
+    _jeeps.clear();
+  }
 
   void _stopListenHeatMap(){
     if(heatMapSymbol != null){
@@ -317,36 +343,99 @@ class _DashboardState extends State<Dashboard> {
     _subscribeToHeatMapDrop();
   }
 
-  Future<void> _selectDateStart(BuildContext context) async {
+  Future<void> _selectDateStartHeatMap(BuildContext context) async {
+    isMouseHoveringRouteInfo = true;
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDateStart,
+      initialDate: _selectedDateStartHeatMap,
       firstDate: DateTime(2023),
-      lastDate: DateTime(2023, 12, 31),
+      lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDateStart) {
+    if (picked != null && picked != _selectedDateStartHeatMap) {
       setState(() {
-        _selectedDateStart = picked;
+        _selectedDateStartHeatMap = picked;
       });
       _stopListenHeatMap();
       _subscribeHeatMap();
     }
+    isMouseHoveringRouteInfo = false;
   }
 
-  Future<void> _selectDateEnd(BuildContext context) async {
+  Future<void> _selectDateEndHeatMap(BuildContext context) async {
+    isMouseHoveringRouteInfo = true;
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDateEnd,
+      initialDate: _selectedDateEndHeatMap,
       firstDate: DateTime(2023),
-      lastDate: DateTime(2023, 12, 31),
+      lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDateEnd) {
+    if (picked != null && picked != _selectedDateEndHeatMap) {
       setState(() {
-        _selectedDateEnd = picked;
+        _selectedDateEndHeatMap = picked;
       });
       _stopListenHeatMap();
       _subscribeHeatMap();
     }
+    isMouseHoveringRouteInfo = false;
+  }
+
+  DateTime selectedDateTimeAnalysis = DateTime.now();
+
+  Future<void> _selectDateTime(BuildContext context) async {
+    isMouseHoveringRouteInfo = true;
+    final DateTime? pickedDateTime = await showDatePicker(
+      context: context,
+      initialDate: selectedDateTimeAnalysis,
+      firstDate: DateTime(2023),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDateTime != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(selectedDateTimeAnalysis),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          selectedDateTimeAnalysis = DateTime(
+            pickedDateTime.year,
+            pickedDateTime.month,
+            pickedDateTime.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
+    }
+    for (var element in _jeeps) {
+      _mapController.removeSymbol(element.data);
+    }
+    _jeeps.clear();
+    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+    _addSymbols(test);
+    isMouseHoveringRouteInfo = false;
+  }
+
+  Future<void> _addSeconds(int seconds, bool isAdd) async {
+    if (selectedDateTimeAnalysis != null) {
+      if(isAdd){
+        setState(() {
+          selectedDateTimeAnalysis = selectedDateTimeAnalysis.add(Duration(seconds: seconds));
+        });
+      } else {
+        setState(() {
+          selectedDateTimeAnalysis = selectedDateTimeAnalysis.subtract(Duration(seconds: seconds));
+        });
+      }
+    }
+
+    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+    for (var element in _jeeps) {
+      _mapController.removeSymbol(element.data);
+    }
+    _jeeps.clear();
+    _addSymbols(test);
   }
 
   @override
@@ -456,7 +545,9 @@ class _DashboardState extends State<Dashboard> {
                       _updateRoutes();
                     } : null),
                 const SizedBox(height: Constants.defaultPadding),
-                const Divider(),
+                Container(
+                    padding: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
+                    child: const Divider()),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -503,7 +594,7 @@ class _DashboardState extends State<Dashboard> {
                                         Expanded(
                                           flex: 3,
                                           child: GestureDetector(
-                                            onTap: () => _selectDateStart(context),
+                                            onTap: () => _selectDateStartHeatMap(context),
                                             child: Container(
                                               padding: const EdgeInsets.all(Constants.defaultPadding/2),
                                               decoration: const BoxDecoration(
@@ -520,7 +611,7 @@ class _DashboardState extends State<Dashboard> {
                                                     maxLines: 1,
                                                   ),
                                                   Text(
-                                                    _selectedDateStart.toString().substring(0, 10),
+                                                    _selectedDateStartHeatMap.toString().substring(0, 10),
                                                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                                     overflow: TextOverflow.ellipsis,
                                                     maxLines: 1,
@@ -534,7 +625,7 @@ class _DashboardState extends State<Dashboard> {
                                         Expanded(
                                           flex: 3,
                                           child: GestureDetector(
-                                            onTap: () => _selectDateEnd(context),
+                                            onTap: () => _selectDateEndHeatMap(context),
                                             child: Container(
                                               padding: const EdgeInsets.all(Constants.defaultPadding/2),
                                               decoration: const BoxDecoration(
@@ -551,7 +642,7 @@ class _DashboardState extends State<Dashboard> {
                                                     maxLines: 1,
                                                   ),
                                                   Text(
-                                                    _selectedDateEnd.toString().substring(0, 10),
+                                                    _selectedDateEndHeatMap.toString().substring(0, 10),
                                                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                                     overflow: TextOverflow.ellipsis,
                                                     maxLines: 1,
@@ -567,7 +658,7 @@ class _DashboardState extends State<Dashboard> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStart, selectedDateEnd: _selectedDateEnd),
+                                        DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
                                         const Spacer(),
                                         Expanded(
                                           flex: 5,
@@ -797,7 +888,10 @@ class _DashboardState extends State<Dashboard> {
                                   _updateRoutes();
                                 } : null),
                             const SizedBox(height: Constants.defaultPadding),
-                            const Divider(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
+                              child: const Divider()),
+                            const SizedBox(height: Constants.defaultPadding),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
@@ -814,7 +908,7 @@ class _DashboardState extends State<Dashboard> {
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(Constants.defaultPadding),
-                                      margin: const EdgeInsets.all(Constants.defaultPadding),
+                                      margin: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
                                       decoration: BoxDecoration(
                                         border: Border.all(
                                           width: 2,
@@ -827,9 +921,13 @@ class _DashboardState extends State<Dashboard> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.start,
                                             children: [
+                                              const Divider(),
                                               Icon(Icons.data_usage_outlined, color: _showHeatMapTab?Colors.lightBlue:Colors.white70),
                                               const SizedBox(width: Constants.defaultPadding),
-                                              Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,),
+                                              Expanded(child: Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
+                                              Spacer(),
+                                              if(_showHeatMapTab)
+                                              DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
                                             ],
                                           ),
                                           if(_showHeatMapTab)
@@ -845,7 +943,7 @@ class _DashboardState extends State<Dashboard> {
                                                       Expanded(
                                                         flex: 3,
                                                         child: GestureDetector(
-                                                          onTap: () => _selectDateStart(context),
+                                                          onTap: () => _selectDateStartHeatMap(context),
                                                           child: Container(
                                                             padding: const EdgeInsets.all(Constants.defaultPadding/2),
                                                             decoration: const BoxDecoration(
@@ -862,7 +960,7 @@ class _DashboardState extends State<Dashboard> {
                                                                   maxLines: 1,
                                                                 ),
                                                                 Text(
-                                                                  _selectedDateStart.toString().substring(0, 10),
+                                                                  _selectedDateStartHeatMap.toString().substring(0, 10),
                                                                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                                                   overflow: TextOverflow.ellipsis,
                                                                   maxLines: 1,
@@ -876,7 +974,7 @@ class _DashboardState extends State<Dashboard> {
                                                       Expanded(
                                                         flex: 3,
                                                         child: GestureDetector(
-                                                          onTap: () => _selectDateEnd(context),
+                                                          onTap: () => _selectDateEndHeatMap(context),
                                                           child: Container(
                                                             padding: const EdgeInsets.all(Constants.defaultPadding/2),
                                                             decoration: const BoxDecoration(
@@ -893,7 +991,7 @@ class _DashboardState extends State<Dashboard> {
                                                                   maxLines: 1,
                                                                 ),
                                                                 Text(
-                                                                  _selectedDateEnd.toString().substring(0, 10),
+                                                                  _selectedDateEndHeatMap.toString().substring(0, 10),
                                                                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                                                   overflow: TextOverflow.ellipsis,
                                                                   maxLines: 1,
@@ -909,8 +1007,9 @@ class _DashboardState extends State<Dashboard> {
                                                   Row(
                                                     mainAxisAlignment: MainAxisAlignment.end,
                                                     children: [
-                                                      DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStart, selectedDateEnd: _selectedDateEnd),
-                                                      const Spacer(),
+                                                      const Spacer(
+                                                        flex: 2
+                                                      ),
                                                       Expanded(
                                                         flex: 5,
                                                         child: GestureDetector(
@@ -1011,8 +1110,211 @@ class _DashboardState extends State<Dashboard> {
                                             ),
                                         ],
                                       ),
-                                    ))
-                                )
+                                    )))
+                              ],
+                            ),
+                            const SizedBox(height: Constants.defaultPadding),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Expanded(child: GestureDetector(
+                                    onTap: () async {
+                                      setState(() {
+                                        _showJeepHistoryTab = !_showJeepHistoryTab;
+                                      });
+                                      if(_showJeepHistoryTab){
+                                        _stopListenJeep();
+                                        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+                                        _addSymbols(test);
+                                      } else {
+                                        for (var element in _jeeps) {
+                                          _mapController.removeSymbol(element.data);
+                                        }
+                                        _jeeps.clear();
+                                        _subscribeToCoordinates();
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(Constants.defaultPadding),
+                                      margin:  const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          width: 2,
+                                          color: _showJeepHistoryTab?Colors.lightBlue:Colors.grey,
+                                        ),
+                                        borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              const Divider(),
+                                              Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
+                                              const SizedBox(width: Constants.defaultPadding),
+                                              Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
+                                              Spacer(),
+                                              if(_showJeepHistoryTab)
+                                                DownloadCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                            ],
+                                          ),
+                                          if(_showJeepHistoryTab)
+                                            Container(
+                                              child: Column(
+                                                children: [
+                                                  const SizedBox(height: Constants.defaultPadding/2),
+                                                  const Divider(),
+                                                  const SizedBox(height: Constants.defaultPadding/2),
+                                                  Row(
+                                                    children:
+                                                    [
+                                                      Expanded(
+                                                        flex: 3,
+                                                        child: GestureDetector(
+                                                          onTap: () => _selectDateTime(context),
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                            decoration: const BoxDecoration(
+                                                              color: Constants.primaryColor,
+                                                              borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                            ),
+                                                            child: Column(
+                                                              mainAxisAlignment: MainAxisAlignment.center,
+                                                              children: [
+                                                                const Text(
+                                                                  'Set Time',
+                                                                  style: TextStyle(fontSize: 16),
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                  maxLines: 1,
+                                                                ),
+                                                                Text(
+                                                                  DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTimeAnalysis).toString(),
+                                                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                  maxLines: 1,
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: Constants.defaultPadding),
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      Expanded(
+                                                        flex: 5,
+                                                        child: GestureDetector(
+                                                          onTap: (){
+                                                            _addSeconds(30, false);
+                                                          },
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                            decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                width: 2,
+                                                                color: Colors.lightBlue,
+                                                              ),
+                                                              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                            ),
+                                                            child: const Text("-30s", style: TextStyle(
+                                                              color:Colors.lightBlue,
+                                                            ),
+                                                            overflow: TextOverflow.ellipsis,
+                                                            maxLines: 1,
+                                                            textAlign: TextAlign.center,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const Spacer(),
+                                                      Expanded(
+                                                        flex:5,
+                                                        child: GestureDetector(
+                                                          onTap: (){
+                                                            _addSeconds(5, false);
+                                                          },
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                            decoration: BoxDecoration(
+                                                              border: Border.all(
+                                                                width: 2,
+                                                                color: Colors.lightBlue,
+                                                              ),
+                                                              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                            ),
+                                                            child: const Text("-5s", style: TextStyle(
+                                                              color: Colors.lightBlue,
+                                                            ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                              maxLines: 1,
+                                                              textAlign: TextAlign.center,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const Spacer(),
+                                                      Expanded(
+                                                        flex:5,
+                                                        child: GestureDetector(
+                                                          onTap: (){
+                                                            _addSeconds(5, true);
+                                                          },
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(
+                                                                  width: 2,
+                                                                  color: Colors.lightBlue,
+                                                                ),
+                                                                borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                              ),
+                                                              child: const Text("+5s", style: TextStyle(
+                                                                color: Colors.lightBlue,
+                                                              ),
+                                                                overflow: TextOverflow.ellipsis,
+                                                                maxLines: 1,
+                                                                textAlign: TextAlign.center,
+                                                              ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const Spacer(),
+                                                      Expanded(
+                                                        flex: 5,
+                                                        child: GestureDetector(
+                                                          onTap: (){
+                                                            _addSeconds(30, true);
+                                                          },
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(
+                                                                  width: 2,
+                                                                  color: Colors.lightBlue,
+                                                                ),
+                                                                borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                              ),
+                                                              child: const Text("+30s", style: TextStyle(
+                                                                color: Colors.lightBlue,
+                                                              ),
+                                                                overflow: TextOverflow.ellipsis,
+                                                                maxLines: 1,
+                                                                textAlign: TextAlign.center,
+                                                              ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    )))
                               ],
                             ),
                           ],
@@ -1091,7 +1393,7 @@ class _DashboardState extends State<Dashboard> {
                                                 color: Constants.secondaryColor,
                                               ),
                                               child: SingleChildScrollView(
-                                                  physics: const AlwaysScrollableScrollPhysics(),
+                                                  physics: const NeverScrollableScrollPhysics(),
                                                   child: Container(
                                                     child: Row(
                                                       children: [
@@ -1115,7 +1417,7 @@ class _DashboardState extends State<Dashboard> {
                                                                               overflow: TextOverflow.ellipsis,
                                                                             ),
                                                                             Text(
-                                                                              "${passenger_count} passengers",
+                                                                              "${passenger_count} total passengers",
                                                                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
                                                                               textAlign: TextAlign.end,
                                                                               maxLines: 1,
@@ -1203,7 +1505,7 @@ class _DashboardState extends State<Dashboard> {
                                       });
                                     },
                                     child: SingleChildScrollView(
-                                      physics: const AlwaysScrollableScrollPhysics(),
+                                      physics: const NeverScrollableScrollPhysics(),
                                       child: Container(
                                         margin: const EdgeInsets.all(Constants.defaultPadding),
                                         decoration: const BoxDecoration(
@@ -1246,7 +1548,7 @@ class _DashboardState extends State<Dashboard> {
                                                                 ),
                                                                 Expanded(
                                                                   child: Text(
-                                                                    "${passenger_count} passengers",
+                                                                    "${passenger_count} total passengers",
                                                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
                                                                     textAlign: TextAlign.end,
                                                                     maxLines: 2,

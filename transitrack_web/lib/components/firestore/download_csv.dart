@@ -22,17 +22,7 @@ class DownloadCSV extends StatelessWidget {
         onTap: () async {
           await downloadCollectionAsCSV(route_choice, Timestamp.fromDate(_selectedDateStart), Timestamp.fromDate(_selectedDateEnd));
         },
-        child: Container(
-            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-            decoration: BoxDecoration(
-              border: Border.all(
-                width: 2,
-                color: Colors.lightBlue,
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
-            ),
-            child: const Center(child: Icon(Icons.download_outlined, size: 20, color: Colors.lightBlue))
-        )
+        child: const Center(child: Icon(Icons.download_outlined, size: 20, color: Colors.lightBlue))
     );
   }
 }
