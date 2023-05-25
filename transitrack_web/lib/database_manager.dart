@@ -4,7 +4,7 @@ import 'models/jeep_model.dart';
 
 class FireStoreDataBase{
   Stream<List<JeepData>> fetchJeepData(int route_id) {
-    final Query<Map<String, dynamic>> jeepRef = FirebaseFirestore.instance.collection('jeeps').where('route_id', isEqualTo: route_id);
+    final Query<Map<String, dynamic>> jeepRef = FirebaseFirestore.instance.collection('jeeps_realtime').where('route_id', isEqualTo: route_id);
     return jeepRef.snapshots().map((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
       return querySnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
         return JeepData.fromSnapshot(doc);
@@ -64,6 +64,33 @@ class FireStoreDataBase{
     return jeepDataStream;
   }
 
+  Stream<List<JeepData>> getLatestJeepDataPerDeviceIdv2(int routeId) {
+    return FirebaseFirestore.instance
+        .collection('jeeps')
+        .snapshots()
+        .asyncMap<List<JeepData>>((QuerySnapshot querySnapshot) async {
+      List<JeepData> jeepDataList = [];
+
+      for (QueryDocumentSnapshot jeepDocument in querySnapshot.docs) {
+        QuerySnapshot subcollectionSnapshot = await jeepDocument.reference
+            .collection('timeline')
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
+
+        if (subcollectionSnapshot.docs.isNotEmpty) {
+          QueryDocumentSnapshot latestDocument = subcollectionSnapshot.docs.first;
+          JeepData jeepData = JeepData.fromSnapshot(latestDocument);
+          if(jeepData.route_id == routeId){
+            jeepDataList.add(jeepData);
+          }
+        }
+      }
+
+      return jeepDataList;
+    });
+  }
+
   Future<List<JeepData>> getLatestJeepDataPerDeviceIdFuture(int routeId) async {
     // Access the Firestore instance
     FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -108,6 +135,32 @@ class FireStoreDataBase{
       JeepData jeepData = JeepData.fromSnapshot(snapshot);
       jeepDataList.add(jeepData);
     });
+
+    return jeepDataList;
+  }
+
+  Future<List<JeepData>> getLatestJeepDataPerDeviceIdFuturev2(int routeId) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('jeeps')
+        .get();
+
+    List<JeepData> jeepDataList = [];
+
+    for (QueryDocumentSnapshot jeepDocument in querySnapshot.docs) {
+      QuerySnapshot subcollectionSnapshot = await jeepDocument.reference
+          .collection('timeline') // Replace with your subcollection name
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (subcollectionSnapshot.docs.isNotEmpty) {
+        QueryDocumentSnapshot latestDocument = subcollectionSnapshot.docs.first;
+        JeepData jeepData = JeepData.fromSnapshot(latestDocument);
+        if(jeepData.route_id == routeId){
+          jeepDataList.add(jeepData);
+        }
+      }
+    }
 
     return jeepDataList;
   }
@@ -181,7 +234,7 @@ class FireStoreDataBase{
 
   Future<List<JeepData>> loadJeepsByRouteId(int routeId) async {
     QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('jeeps')
+        .collection('jeeps_realtime')
         .where('route_id', isEqualTo: routeId)
         .get();
 

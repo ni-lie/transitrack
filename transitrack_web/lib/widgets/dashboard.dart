@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:transitrack_web/widgets/shimmer_desktop_route_info.dart';
 import 'package:transitrack_web/widgets/shimmer_widget.dart';
 import '../MenuController.dart';
 import '../components/firestore/download_heatmap_csv.dart';
@@ -57,8 +60,6 @@ class _DashboardState extends State<Dashboard> {
   bool _showHeatMapTab = false;
   bool _showJeepHistoryTab = false;
   bool _isListeningJeep = false;
-
-  bool _mobileDrawerOpen = false;
   
   void _setRoute(int choice){
     setState(() {
@@ -88,11 +89,20 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _updateSymbols(List<JeepData> Jeepneys) {
+
     for (var Jeepney in Jeepneys) {
+      if(isHoverJeep){
+        if(pressedJeep.jeep.device_id == Jeepney.device_id){
+          pressedJeep.jeep = Jeepney;
+        }
+      }
       double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
       double angleDegrees = angleRadians * (180 / pi);
       var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
       if(Jeepney.is_active){
+        if(isHoverJeep && pressedJeep.jeep.device_id == Jeepney.device_id){
+          pressedJeep.jeep.location = Jeepney.location;
+        }
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconRotate: 90 - angleDegrees
@@ -106,10 +116,12 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _updateRoutes(){
-    _jeeps.forEach((element) {_mapController.removeSymbol(element.data);});
+    for (var element in _jeeps) {_mapController.removeSymbol(element.data);}
     _jeeps.clear();
 
-    _lines.forEach((line) => _mapController.removeLine(line));
+    for (var line in _lines) {
+      _mapController.removeLine(line);
+    }
     _lines.clear();
 
     _mapController.addLine(Routes.RouteLines[route_choice]).then((line) {
@@ -120,38 +132,41 @@ class _DashboardState extends State<Dashboard> {
 
 
   Future<void> _subscribeToCoordinates() async {
-    if(_showHeatMapTab){
-      _subscribeHeatMap();
-    }
-
-    if(_showJeepHistoryTab){
-      for (var element in _jeeps) {
-        _mapController.removeSymbol(element.data);
+    try{
+      if(_showHeatMapTab){
+        _subscribeHeatMap();
       }
-      _jeeps.clear();
 
-      List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
-      _addSymbols(test);
-    } else {
-      List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuture(route_choice);
-      _addSymbols(test);
-
-      jeepListener = FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice).listen((event) async {
-        if(event.isNotEmpty){
-          for (var element in event) {
-            if (element.route_id == route_choice){
-              _updateSymbols(event);
-            }
-          }
-        } else {
-          _updateSymbols([]);
+      if(_showJeepHistoryTab){
+        for (var element in _jeeps) {
+          _mapController.removeSymbol(element.data);
         }
-      });
+        _jeeps.clear();
+        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+        _addSymbols(test);
+      } else {
+        List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
+        _addSymbols(test);
 
-      _isListeningJeep = true;
-      setState(() {
-        _isLoaded = true;
-      });
+        jeepListener = FireStoreDataBase().fetchJeepData(route_choice).listen((event) async {
+          if(event.isNotEmpty){
+            for (var element in event) {
+              if (element.route_id == route_choice){
+                _updateSymbols(event);
+              }
+            }
+          } else {
+            _updateSymbols([]);
+          }
+        });
+
+        _isListeningJeep = true;
+        setState(() {
+          _isLoaded = true;
+        });
+      }
+    }catch(e){
+      print(e);
     }
   }
 
@@ -477,8 +492,9 @@ class _DashboardState extends State<Dashboard> {
               children: [
                 DrawerHeader(
                     child: Image.asset(
-                        'assets/logo.png'
-                    )
+                        'assets/logo.png',
+                        scale: 0.9
+                    ),
                 ),
                 DrawerListTile(
                     Route: JeepRoutes[0],
@@ -490,7 +506,7 @@ class _DashboardState extends State<Dashboard> {
                       });
                       _setRoute(0);
                       _stopListenHeatMap();
-                      jeepListener.cancel();
+                      _stopListenJeep();
                       _subscribeToCoordinates();
                       _updateRoutes();
                     } : null),
@@ -504,7 +520,7 @@ class _DashboardState extends State<Dashboard> {
                       });
                       _setRoute(1);
                       _stopListenHeatMap();
-                      jeepListener.cancel();
+                      _stopListenJeep();
                       _subscribeToCoordinates();
                       _updateRoutes();
                     } : null),
@@ -518,7 +534,7 @@ class _DashboardState extends State<Dashboard> {
                       });
                       _setRoute(2);
                       _stopListenHeatMap();
-                      jeepListener.cancel();
+                      _stopListenJeep();
                       _subscribeToCoordinates();
                       _updateRoutes();
                     } : null),
@@ -532,7 +548,7 @@ class _DashboardState extends State<Dashboard> {
                       });
                       _setRoute(3);
                       _stopListenHeatMap();
-                      jeepListener.cancel();
+                      _stopListenJeep();
                       _subscribeToCoordinates();
                       _updateRoutes();
                     } : null),
@@ -546,7 +562,7 @@ class _DashboardState extends State<Dashboard> {
                       });
                       _setRoute(4);
                       _stopListenHeatMap();
-                      jeepListener.cancel();
+                      _stopListenJeep();
                       _subscribeToCoordinates();
                       _updateRoutes();
                     } : null),
@@ -585,7 +601,10 @@ class _DashboardState extends State<Dashboard> {
                                 children: [
                                   Icon(Icons.data_usage_outlined, color: _showHeatMapTab?Colors.lightBlue:Colors.white70),
                                   const SizedBox(width: Constants.defaultPadding),
-                                  Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70))
+                                  Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70)),
+                                  const Spacer(),
+                                  if(_showHeatMapTab)
+                                    DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
                                 ],
                               ),
                               if(_showHeatMapTab)
@@ -664,8 +683,7 @@ class _DashboardState extends State<Dashboard> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
-                                        const Spacer(),
+                                        const Spacer(flex: 2),
                                         Expanded(
                                           flex: 5,
                                           child: GestureDetector(
@@ -808,7 +826,7 @@ class _DashboardState extends State<Dashboard> {
                                   Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
                                   const SizedBox(width: Constants.defaultPadding),
                                   Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
-                                  Spacer(),
+                                  const SizedBox(width: Constants.defaultPadding),
                                   if(_showJeepHistoryTab)
                                     DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
                                 ],
@@ -972,6 +990,7 @@ class _DashboardState extends State<Dashboard> {
                         )))
                   ],
                 ),
+                const SizedBox(height: Constants.defaultPadding),
               ],
             ),
           ),
@@ -1023,8 +1042,9 @@ class _DashboardState extends State<Dashboard> {
                           children: [
                             DrawerHeader(
                                 child: Image.asset(
-                                    'assets/logo.png'
-                                )
+                                    'assets/logo.png',
+                                    scale: 0.9
+                                ),
                             ),
                             DrawerListTile(
                                 Route: JeepRoutes[0],
@@ -1036,7 +1056,7 @@ class _DashboardState extends State<Dashboard> {
                                   });
                                   _setRoute(0);
                                   _stopListenHeatMap();
-                                  jeepListener.cancel();
+                                  _stopListenJeep();
                                   _subscribeToCoordinates();
                                   _updateRoutes();
                                 } : null),
@@ -1050,7 +1070,7 @@ class _DashboardState extends State<Dashboard> {
                                   });
                                   _setRoute(1);
                                   _stopListenHeatMap();
-                                  jeepListener.cancel();
+                                  _stopListenJeep();
                                   _subscribeToCoordinates();
                                   _updateRoutes();
                                 } : null),
@@ -1064,7 +1084,7 @@ class _DashboardState extends State<Dashboard> {
                                   });
                                   _setRoute(2);
                                   _stopListenHeatMap();
-                                  jeepListener.cancel();
+                                  _stopListenJeep();
                                   _subscribeToCoordinates();
                                   _updateRoutes();
                                 } : null),
@@ -1078,7 +1098,7 @@ class _DashboardState extends State<Dashboard> {
                                   });
                                   _setRoute(3);
                                   _stopListenHeatMap();
-                                  jeepListener.cancel();
+                                  _stopListenJeep();
                                   _subscribeToCoordinates();
                                   _updateRoutes();
                                 } : null),
@@ -1092,7 +1112,7 @@ class _DashboardState extends State<Dashboard> {
                                   });
                                   _setRoute(4);
                                   _stopListenHeatMap();
-                                  jeepListener.cancel();
+                                  _stopListenJeep();
                                   _subscribeToCoordinates();
                                   _updateRoutes();
                                 } : null),
@@ -1100,7 +1120,6 @@ class _DashboardState extends State<Dashboard> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
                               child: const Divider()),
-                            const SizedBox(height: Constants.defaultPadding),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
@@ -1117,7 +1136,7 @@ class _DashboardState extends State<Dashboard> {
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(Constants.defaultPadding),
-                                      margin: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
+                                      margin: const EdgeInsets.all(Constants.defaultPadding),
                                       decoration: BoxDecoration(
                                         border: Border.all(
                                           width: 2,
@@ -1130,199 +1149,194 @@ class _DashboardState extends State<Dashboard> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.start,
                                             children: [
-                                              const Divider(),
                                               Icon(Icons.data_usage_outlined, color: _showHeatMapTab?Colors.lightBlue:Colors.white70),
                                               const SizedBox(width: Constants.defaultPadding),
-                                              Expanded(child: Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
-                                              Spacer(),
+                                              Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70)),
+                                              const Spacer(),
                                               if(_showHeatMapTab)
-                                              DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                                DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
                                             ],
                                           ),
                                           if(_showHeatMapTab)
-                                            Container(
-                                              child: Column(
-                                                children: [
-                                                  const SizedBox(height: Constants.defaultPadding/2),
-                                                  const Divider(),
-                                                  const SizedBox(height: Constants.defaultPadding/2),
-                                                  Row(
-                                                    children:
-                                                    [
-                                                      Expanded(
-                                                        flex: 3,
-                                                        child: GestureDetector(
-                                                          onTap: () => _selectDateStartHeatMap(context),
-                                                          child: Container(
-                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                                            decoration: const BoxDecoration(
-                                                              color: Constants.primaryColor,
-                                                              borderRadius: BorderRadius.all(Radius.circular(15)),
-                                                            ),
-                                                            child: Column(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              children: [
-                                                                const Text(
-                                                                  'Start',
-                                                                  style: TextStyle(fontSize: 16),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                                Text(
-                                                                  _selectedDateStartHeatMap.toString().substring(0, 10),
-                                                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                              ],
-                                                            ),
+                                            Column(
+                                              children: [
+                                                const SizedBox(height: Constants.defaultPadding/2),
+                                                const Divider(),
+                                                const SizedBox(height: Constants.defaultPadding/2),
+                                                Row(
+                                                  children:
+                                                  [
+                                                    Expanded(
+                                                      flex: 3,
+                                                      child: GestureDetector(
+                                                        onTap: () => _selectDateStartHeatMap(context),
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                          decoration: const BoxDecoration(
+                                                            color: Constants.primaryColor,
+                                                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                          ),
+                                                          child: Column(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              const Text(
+                                                                'Start',
+                                                                style: TextStyle(fontSize: 16),
+                                                                overflow: TextOverflow.ellipsis,
+                                                                maxLines: 1,
+                                                              ),
+                                                              Text(
+                                                                _selectedDateStartHeatMap.toString().substring(0, 10),
+                                                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                                overflow: TextOverflow.ellipsis,
+                                                                maxLines: 1,
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                       ),
-                                                      const SizedBox(width: Constants.defaultPadding),
-                                                      Expanded(
-                                                        flex: 3,
-                                                        child: GestureDetector(
-                                                          onTap: () => _selectDateEndHeatMap(context),
-                                                          child: Container(
-                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                                            decoration: const BoxDecoration(
-                                                              color: Constants.primaryColor,
-                                                              borderRadius: BorderRadius.all(Radius.circular(15)),
-                                                            ),
-                                                            child: Column(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              children: [
-                                                                const Text(
-                                                                  'End',
-                                                                  style: TextStyle(fontSize: 16),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                                Text(
-                                                                  _selectedDateEndHeatMap.toString().substring(0, 10),
-                                                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                              ],
-                                                            ),
+                                                    ),
+                                                    const SizedBox(width: Constants.defaultPadding),
+                                                    Expanded(
+                                                      flex: 3,
+                                                      child: GestureDetector(
+                                                        onTap: () => _selectDateEndHeatMap(context),
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                          decoration: const BoxDecoration(
+                                                            color: Constants.primaryColor,
+                                                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                          ),
+                                                          child: Column(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              const Text(
+                                                                'End',
+                                                                style: TextStyle(fontSize: 16),
+                                                                overflow: TextOverflow.ellipsis,
+                                                                maxLines: 1,
+                                                              ),
+                                                              Text(
+                                                                _selectedDateEndHeatMap.toString().substring(0, 10),
+                                                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                                overflow: TextOverflow.ellipsis,
+                                                                maxLines: 1,
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: Constants.defaultPadding),
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    children: [
-                                                      const Spacer(
-                                                        flex: 2
-                                                      ),
-                                                      Expanded(
-                                                        flex: 5,
-                                                        child: GestureDetector(
-                                                          onTap: (){
-                                                            setState((){
-                                                              showPickUps = !showPickUps;
-                                                              if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
-                                                                if(showPickUps){
-                                                                  _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                    iconOpacity: 1,
-                                                                    textOpacity: 1,
-                                                                  ));
-                                                                } else {
-                                                                  _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                      iconOpacity: 0,
-                                                                      textOpacity: 0
-                                                                  ));
-                                                                }
-                                                              }
-                                                              for (var element in _heatmapRideCircles) {
-                                                                _mapController.updateCircle(element.data, CircleOptions(
-                                                                  circleRadius: showPickUps?10:0,
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: Constants.defaultPadding),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    const Spacer(flex: 2),
+                                                    Expanded(
+                                                      flex: 5,
+                                                      child: GestureDetector(
+                                                        onTap: (){
+                                                          setState((){
+                                                            showPickUps = !showPickUps;
+                                                            if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
+                                                              if(showPickUps){
+                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
+                                                                  iconOpacity: 1,
+                                                                  textOpacity: 1,
+                                                                ));
+                                                              } else {
+                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
+                                                                    iconOpacity: 0,
+                                                                    textOpacity: 0
                                                                 ));
                                                               }
-                                                            });
-                                                          },
-                                                          child: Container(
-                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                                            decoration: BoxDecoration(
-                                                              color: showPickUps?Colors.red.withOpacity(0.3):null,
-                                                              border: Border.all(
-                                                                width: 2,
-                                                                color: showPickUps?Colors.red:Colors.white38,
-                                                              ),
-                                                              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                            }
+                                                            for (var element in _heatmapRideCircles) {
+                                                              _mapController.updateCircle(element.data, CircleOptions(
+                                                                circleRadius: showPickUps?10:0,
+                                                              ));
+                                                            }
+                                                          });
+                                                        },
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                          decoration: BoxDecoration(
+                                                            color: showPickUps?Colors.red.withOpacity(0.3):null,
+                                                            border: Border.all(
+                                                              width: 2,
+                                                              color: showPickUps?Colors.red:Colors.white38,
                                                             ),
-                                                            child: Text("Pick Ups", style: TextStyle(
-                                                              color: showPickUps?Colors.white:Colors.white38,
-                                                            ),
-                                                              overflow: TextOverflow.ellipsis,
-                                                              maxLines: 1,
-                                                              textAlign: TextAlign.center,
-                                                            ),
+                                                            borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                          ),
+                                                          child: Text("Pick Ups", style: TextStyle(
+                                                            color: showPickUps?Colors.white:Colors.white38,
+                                                          ),
+                                                            overflow: TextOverflow.ellipsis,
+                                                            maxLines: 1,
+                                                            textAlign: TextAlign.center,
                                                           ),
                                                         ),
                                                       ),
-                                                      const Spacer(),
-                                                      Expanded(
-                                                        flex:5,
-                                                        child: GestureDetector(
-                                                          onTap: (){
-                                                            setState((){
-                                                              showDropOffs = !showDropOffs;
-                                                              if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
-                                                                if(showDropOffs){
-                                                                  _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                    iconOpacity: 1,
-                                                                    textOpacity: 1,
-                                                                  ));
-                                                                } else {
-                                                                  _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                      iconOpacity: 0,
-                                                                      textOpacity: 0
-                                                                  ));
-                                                                }
-                                                              }
-                                                              for (var element in _heatmapDropCircles) {
-                                                                _mapController.updateCircle(element.data, CircleOptions(
-                                                                  circleRadius: showDropOffs?10:0,
+                                                    ),
+                                                    const Spacer(),
+                                                    Expanded(
+                                                      flex:5,
+                                                      child: GestureDetector(
+                                                        onTap: (){
+                                                          setState((){
+                                                            showDropOffs = !showDropOffs;
+                                                            if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
+                                                              if(showDropOffs){
+                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
+                                                                  iconOpacity: 1,
+                                                                  textOpacity: 1,
+                                                                ));
+                                                              } else {
+                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
+                                                                    iconOpacity: 0,
+                                                                    textOpacity: 0
                                                                 ));
                                                               }
-                                                            });
-                                                          },
-                                                          child: Container(
-                                                            padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                                            decoration: BoxDecoration(
-                                                              color: showDropOffs?Colors.lightGreen.withOpacity(0.3):null,
-                                                              border: Border.all(
-                                                                width: 2,
-                                                                color: showDropOffs?Colors.lightGreen:Colors.white38,
-                                                              ),
-                                                              borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                            }
+                                                            for (var element in _heatmapDropCircles) {
+                                                              _mapController.updateCircle(element.data, CircleOptions(
+                                                                circleRadius: showDropOffs?10:0,
+                                                              ));
+                                                            }
+                                                          });
+                                                        },
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                          decoration: BoxDecoration(
+                                                            color: showDropOffs?Colors.lightGreen.withOpacity(0.3):null,
+                                                            border: Border.all(
+                                                              width: 2,
+                                                              color: showDropOffs?Colors.lightGreen:Colors.white38,
                                                             ),
-                                                            child: Text("Drop Offs", style: TextStyle(
-                                                                color: showDropOffs?Colors.white:Colors.white38
-                                                            ),
-                                                              overflow: TextOverflow.ellipsis,
-                                                              maxLines: 1,
-                                                              textAlign: TextAlign.center,
-                                                            ),
+                                                            borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                                                          ),
+                                                          child: Text("Drop Offs", style: TextStyle(
+                                                              color: showDropOffs?Colors.white:Colors.white38
+                                                          ),
+                                                            overflow: TextOverflow.ellipsis,
+                                                            maxLines: 1,
+                                                            textAlign: TextAlign.center,
                                                           ),
                                                         ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            )
                                         ],
                                       ),
-                                    )))
+                                    ))
+                                )
                               ],
                             ),
-                            const SizedBox(height: Constants.defaultPadding),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
@@ -1340,7 +1354,7 @@ class _DashboardState extends State<Dashboard> {
                                           _mapController.removeSymbol(element.data);
                                         }
                                         _jeeps.clear();
-                                        _subscribeToCoordinates();
+                                        // _subscribeToCoordinates();
                                       }
                                     },
                                     child: Container(
@@ -1358,7 +1372,6 @@ class _DashboardState extends State<Dashboard> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.start,
                                             children: [
-                                              const Divider(),
                                               Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
                                               const SizedBox(width: Constants.defaultPadding),
                                               Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
@@ -1526,6 +1539,7 @@ class _DashboardState extends State<Dashboard> {
                                     )))
                               ],
                             ),
+                            const SizedBox(height: Constants.defaultPadding),
                           ],
                         ),
                       ),
@@ -1536,7 +1550,7 @@ class _DashboardState extends State<Dashboard> {
                   flex: 5,
                   child: Stack(
                     children: [
-                      Container(
+                      SizedBox(
                         width: double.infinity,
                         height: SizeConfig.screenHeight,
                         child: Row(
@@ -1564,10 +1578,10 @@ class _DashboardState extends State<Dashboard> {
                                       Expanded(child: MapboxMap(
                                             accessToken: Keys.MapBoxKey,
                                             styleString: Keys.MapBoxNight,
-                                            zoomGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? false),
-                                            scrollGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? false),
+                                            zoomGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? true),
+                                            scrollGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? true),
                                             doubleClickZoomEnabled: false,
-                                            dragEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? false),
+                                            dragEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? true),
                                             minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
                                             onMapClick: (Point<double> point, LatLng coordinates) {
                                               setState(() {
@@ -1681,7 +1695,7 @@ class _DashboardState extends State<Dashboard> {
                                             }
                                         )
                                         :StreamBuilder(
-                                            stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
+                                            stream: FireStoreDataBase().fetchJeepData(route_choice),
                                             builder: (context, snapshot) {
                                               if(!snapshot.hasData || snapshot.hasError){
                                                 return const RouteInfoShimmerV2();
@@ -1814,7 +1828,7 @@ class _DashboardState extends State<Dashboard> {
                                           future: FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
                                           builder: (context, snapshot) {
                                             if (!snapshot.hasData || snapshot.hasError) {
-                                              return ShimmerWidget(height: 500,);
+                                              return const ShimmerDesktopRouteInfo();
                                             }
                                             var data = snapshot.data!;
                                             double operating = data.where((jeep) => jeep.is_active).length.toDouble();
@@ -1870,10 +1884,10 @@ class _DashboardState extends State<Dashboard> {
                                           }
                                         )
                                           :StreamBuilder(
-                                            stream: FireStoreDataBase().getLatestJeepDataPerDeviceId(route_choice),
+                                            stream: FireStoreDataBase().fetchJeepData(route_choice),
                                             builder: (context, snapshot) {
                                               if (!snapshot.hasData || snapshot.hasError) {
-                                                return ShimmerWidget(height: 500,);
+                                                return const ShimmerDesktopRouteInfo();
                                               }
                                               var data = snapshot.data!;
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
@@ -1952,6 +1966,8 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
+
+
 
 
 
