@@ -144,7 +144,7 @@ class _DashboardState extends State<Dashboard> {
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
             geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
             iconRotate: 90 - angleDegrees,
-            iconOpacity: Jeepney.is_active?1:0
+            iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0
         ));
 
       } else {

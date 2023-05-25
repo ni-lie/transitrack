@@ -22,7 +22,7 @@ Future<void> downloadHistoricalJeepCollectionAsCSV(int routeId, Timestamp select
 
   List<List<dynamic>> csvData1 = [
     ['Latest Jeep Data as of ${DateFormat('MM-dd-yyyy').format(selectedDateTime.toDate())}, Route: ${JeepRoutes[routeId].name}', ' ', ' ', ' ', ' '],
-    ['Timestamp', 'Device ID', 'Passenger Count', 'Location', 'Street', 'Acceleration'], // Replace with your field names
+    ['Timestamp', 'Device ID', 'Passenger Count', 'Location', 'Street', 'Acceleration', 'Air quality', 'Gyroscope', 'Speed', 'Ambient Temperature'],
     ...historicalJeepDataList.map((data) {
       return [
         DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate()),
@@ -31,6 +31,10 @@ Future<void> downloadHistoricalJeepCollectionAsCSV(int routeId, Timestamp select
         '${data.location.latitude}, ${data.location.longitude}',
         '',
         data.acceleration,
+        data.air_qual,
+        data.gyroscope,
+        data.speed,
+        data.temp
       ];
     }),
   ];
