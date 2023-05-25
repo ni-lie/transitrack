@@ -89,6 +89,15 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _updateSymbols(List<JeepData> Jeepneys) {
+    List<String> device_ids_new = Jeepneys.map((jeepData) => jeepData.device_id).toList();
+    List<JeepEntity> elementsNotInList2 = _jeeps.where((element1) => !device_ids_new.contains(element1.jeep.device_id)).toList();
+
+    for (var element in elementsNotInList2) {
+      if(pressedJeep == element){
+        isHoverJeep = false;
+      }
+      _mapController.removeSymbol(element.data);
+    }
 
     for (var Jeepney in Jeepneys) {
       if(isHoverJeep){
@@ -98,20 +107,30 @@ class _DashboardState extends State<Dashboard> {
       }
       double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
       double angleDegrees = angleRadians * (180 / pi);
-      var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
-      if(Jeepney.is_active){
+      if(_jeeps.any((element) => element.jeep.device_id == Jeepney.device_id)){
+        var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
         if(isHoverJeep && pressedJeep.jeep.device_id == Jeepney.device_id){
           pressedJeep.jeep.location = Jeepney.location;
         }
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
-          geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
-          iconRotate: 90 - angleDegrees
+            geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
+            iconRotate: 90 - angleDegrees,
+            iconOpacity: Jeepney.is_active?1:0
         ));
       } else {
-        _mapController.updateSymbol(symbolToUpdate.data, const SymbolOptions(
-            iconOpacity: 0
-        ));
+        final jeepEntity = SymbolOptions(
+          geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
+          iconSize: 0.1,
+          iconImage: JeepRoutes[route_choice].image,
+          textField: Jeepney.device_id,
+          textOpacity: 0,
+          iconRotate: 90 - angleDegrees,
+        );
+        _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
+          _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
+        });
       }
+
     }
   }
 
@@ -142,7 +161,7 @@ class _DashboardState extends State<Dashboard> {
           _mapController.removeSymbol(element.data);
         }
         _jeeps.clear();
-        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
         _addSymbols(test);
       } else {
         List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
@@ -433,7 +452,7 @@ class _DashboardState extends State<Dashboard> {
       _mapController.removeSymbol(element.data);
     }
     _jeeps.clear();
-    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
     _addSymbols(test);
     isMouseHoveringRouteInfo = false;
   }
@@ -451,12 +470,8 @@ class _DashboardState extends State<Dashboard> {
       }
     }
 
-    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
-    for (var element in _jeeps) {
-      _mapController.removeSymbol(element.data);
-    }
-    _jeeps.clear();
-    _addSymbols(test);
+    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+    _updateSymbols(test);
   }
 
   @override
@@ -797,7 +812,7 @@ class _DashboardState extends State<Dashboard> {
                           });
                           if(_showJeepHistoryTab){
                             _stopListenJeep();
-                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
                             _addSymbols(test);
                           } else {
                             for (var element in _jeeps) {
@@ -1347,14 +1362,14 @@ class _DashboardState extends State<Dashboard> {
                                       });
                                       if(_showJeepHistoryTab){
                                         _stopListenJeep();
-                                        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+                                        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
                                         _addSymbols(test);
                                       } else {
                                         for (var element in _jeeps) {
                                           _mapController.removeSymbol(element.data);
                                         }
                                         _jeeps.clear();
-                                        // _subscribeToCoordinates();
+                                        _subscribeToCoordinates();
                                       }
                                     },
                                     child: Container(
@@ -1607,7 +1622,7 @@ class _DashboardState extends State<Dashboard> {
                                         ),
                                         child: _showJeepHistoryTab
                                         ?FutureBuilder(
-                                            future: FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                            future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
                                             builder: (context, snapshot){
                                               if(!snapshot.hasData || snapshot.hasError){
                                                 return const RouteInfoShimmerV2();
@@ -1825,7 +1840,7 @@ class _DashboardState extends State<Dashboard> {
                                         ),
                                         child: _showJeepHistoryTab
                                           ?FutureBuilder(
-                                          future: FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                          future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
                                           builder: (context, snapshot) {
                                             if (!snapshot.hasData || snapshot.hasError) {
                                               return const ShimmerDesktopRouteInfo();

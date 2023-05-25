@@ -13,7 +13,7 @@ import '../../config/route_coordinates.dart';
 
 
 Future<void> downloadHistoricalJeepCollectionAsCSV(int routeId, Timestamp selectedDateTime) async {
-  var historicalJeepDataList = await FireStoreDataBase().getLatestJeepDataAnalysisPerDeviceIdFuture(routeId, selectedDateTime);
+  var historicalJeepDataList = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(routeId, selectedDateTime);
 
   Future<List<String>> getAddressFromLatLngList(List<dynamic> locations) async {
     List<Future<String>> addressFutures = locations.map((location) => getAddressFromLatLngFuture(location.latitude, location.longitude)).toList();

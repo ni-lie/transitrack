@@ -14,7 +14,7 @@ class JeepData{
   bool disembark;
   List<double> gyroscope;
   double temp;
-  int air_qual;
+  double air_qual;
 
   JeepData({
     required this.device_id,
@@ -47,7 +47,7 @@ class JeepData{
     bool disembark = data['disembark'] as bool;
     List<double> gyroscope = List.castFrom<dynamic, double>(data['gyroscope']);
     double temp = data['temp'] as double;
-    int air_qual = data['air_qual'];
+    double air_qual = data['air_qual'] as double;
 
     return JeepData(
       device_id: device_id,

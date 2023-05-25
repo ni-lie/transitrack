@@ -41,7 +41,7 @@ class ShimmerDesktopRouteInfo extends StatelessWidget {
                 child: PieChart(
                   PieChartData(
                     sectionsSpace: 0,
-                    centerSpaceRadius: 60,
+                    centerSpaceRadius: 70,
                     startDegreeOffset: -90,
                     sections: [
                       PieChartSectionData(
