@@ -87,22 +87,60 @@ class FireStoreDataBase{
     return jeepDataList;
   }
 
-  Stream<List<HeatMapData>> fetchHeatMapRide(int route_id, Timestamp start, Timestamp end) {
-    final Query<Map<String, dynamic>> heatmapRef = FirebaseFirestore.instance.collection('heatmap_ride').where('route_id', isEqualTo: route_id).where('timestamp', isGreaterThanOrEqualTo: start).where('timestamp', isLessThanOrEqualTo: end);
-    return heatmapRef.snapshots().map((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
-      return querySnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-        return HeatMapData.fromSnapshot(doc);
-      }).toList();
-    });
+  Future<List<JeepData>> fetchHeatMapRide(int route_id, Timestamp start, Timestamp end) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('jeeps_historical')
+        .get();
+
+    List<JeepData> jeepDataList = [];
+
+    for (QueryDocumentSnapshot<Map<String, dynamic>> jeepDocument in querySnapshot.docs) {
+      QuerySnapshot<Map<String, dynamic>> subcollectionSnapshot = await jeepDocument.reference
+          .collection('timeline')
+          .where('route_id', isEqualTo: route_id)
+          .where('embark', isEqualTo: true)
+          .where('timestamp', isGreaterThan: start)
+          .where('timestamp', isLessThanOrEqualTo: end)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      if (subcollectionSnapshot.docs.isNotEmpty) {
+        for (QueryDocumentSnapshot<Map<String, dynamic>> subcollectionDocument in subcollectionSnapshot.docs) {
+          JeepData jeepData = JeepData.fromSnapshot(subcollectionDocument);
+          jeepDataList.add(jeepData);
+        }
+      }
+    }
+
+    return jeepDataList;
   }
 
-  Stream<List<HeatMapData>> fetchHeatMapDrop(int route_id, Timestamp start, Timestamp end) {
-    final Query<Map<String, dynamic>> heatmapRef = FirebaseFirestore.instance.collection('heatmap_drop').where('route_id', isEqualTo: route_id).where('timestamp', isGreaterThanOrEqualTo: start).where('timestamp', isLessThanOrEqualTo: end);
-    return heatmapRef.snapshots().map((QuerySnapshot<Map<String, dynamic>> querySnapshot) {
-      return querySnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-        return HeatMapData.fromSnapshot(doc);
-      }).toList();
-    });
+  Future<List<JeepData>> fetchHeatMapDrop(int route_id, Timestamp start, Timestamp end) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('jeeps_historical')
+        .get();
+
+    List<JeepData> jeepDataList = [];
+
+    for (QueryDocumentSnapshot<Map<String, dynamic>> jeepDocument in querySnapshot.docs) {
+      QuerySnapshot<Map<String, dynamic>> subcollectionSnapshot = await jeepDocument.reference
+          .collection('timeline')
+          .where('route_id', isEqualTo: route_id)
+          .where('disembark', isEqualTo: true)
+          .where('timestamp', isGreaterThan: start)
+          .where('timestamp', isLessThanOrEqualTo: end)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      if (subcollectionSnapshot.docs.isNotEmpty) {
+        for (QueryDocumentSnapshot<Map<String, dynamic>> subcollectionDocument in subcollectionSnapshot.docs) {
+          JeepData jeepData = JeepData.fromSnapshot(subcollectionDocument);
+          jeepDataList.add(jeepData);
+        }
+      }
+    }
+
+    return jeepDataList;
   }
 
   Future<List<JeepData>> loadJeepsByRouteId(int routeId) async {

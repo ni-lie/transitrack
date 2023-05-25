@@ -38,10 +38,8 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late MapboxMapController _mapController;
   late StreamSubscription<List<JeepData>> jeepListener;
-  late StreamSubscription<List<HeatMapData>> heatmapRideListener;
-  late StreamSubscription<List<HeatMapData>> heatmapDropListener;
+
   int route_choice = 0;
-  late Stream<Stream<List<JeepData>>> jeeps_snapshot;
   List<JeepEntity> _jeeps = [];
   List<Line> _lines = [];
   List<HeatMapEntity> _heatmapRideCircles = [];
@@ -88,6 +86,34 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  void _addCirclesDrop(List<JeepData> Jeepneys) {
+    for (var element in Jeepneys) {
+      _mapController.addCircle(CircleOptions(
+          geometry: LatLng(element.location.latitude, element.location.longitude),
+          circleRadius: showDropOffs?10:0,
+          circleColor: '#00FF00',
+          circleOpacity: 0.5
+      )
+      ).then((heatmap) {
+        _heatmapDropCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
+      });
+    }
+  }
+
+  void _addCirclesRide(List<JeepData> Jeepneys) {
+    for (var element in Jeepneys) {
+      _mapController.addCircle(CircleOptions(
+          geometry: LatLng(element.location.latitude, element.location.longitude),
+          circleRadius: showPickUps?10:0,
+          circleColor: '#FF0000',
+          circleOpacity: 0.5
+      )
+      ).then((heatmap) {
+        _heatmapRideCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
+      });
+    }
+  }
+
   void _updateSymbols(List<JeepData> Jeepneys) {
     List<String> device_ids_new = Jeepneys.map((jeepData) => jeepData.device_id).toList();
     List<JeepEntity> elementsNotInList2 = _jeeps.where((element1) => !device_ids_new.contains(element1.jeep.device_id)).toList();
@@ -111,12 +137,16 @@ class _DashboardState extends State<Dashboard> {
         var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
         if(isHoverJeep && pressedJeep.jeep.device_id == Jeepney.device_id){
           pressedJeep.jeep.location = Jeepney.location;
+          if(!pressedJeep.jeep.is_active){
+            isHoverJeep = false;
+          }
         }
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
             geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
             iconRotate: 90 - angleDegrees,
             iconOpacity: Jeepney.is_active?1:0
         ));
+
       } else {
         final jeepEntity = SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
@@ -195,30 +225,8 @@ class _DashboardState extends State<Dashboard> {
     }
     _heatmapDropCircles.clear();
 
-    heatmapDropListener = FireStoreDataBase().fetchHeatMapDrop(route_choice, Timestamp.fromDate(_selectedDateStartHeatMap), Timestamp.fromDate(_selectedDateEndHeatMap)).listen((event) async {
-      for (var element in event) {
-        bool isMatching = false;
-
-        for (var heatmap in _heatmapDropCircles) {
-          if (heatmap.heatmap.heatmap_id == element.heatmap_id) {
-            isMatching = true;
-            break;
-          }
-        }
-
-        if (isMatching == false) {
-          _mapController.addCircle(CircleOptions(
-            geometry: LatLng(element.location.latitude, element.location.longitude),
-            circleRadius: showDropOffs?10:0,
-            circleColor: '#00FF00',
-            circleOpacity: 0.05*element.passenger_count,
-          )
-          ).then((heatmap) {
-            _heatmapDropCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
-          });
-        }
-      }
-    });
+    List<JeepData> heatmapDrop = await FireStoreDataBase().fetchHeatMapDrop(route_choice, Timestamp.fromDate(_selectedDateStartHeatMap), Timestamp.fromDate(_selectedDateEndHeatMap));
+    _addCirclesDrop(heatmapDrop);
   }
 
   Future<void> _subscribeToHeatMapRide() async {
@@ -227,30 +235,8 @@ class _DashboardState extends State<Dashboard> {
     }
     _heatmapRideCircles.clear();
 
-    heatmapRideListener = FireStoreDataBase().fetchHeatMapRide(route_choice, Timestamp.fromDate(_selectedDateStartHeatMap), Timestamp.fromDate(_selectedDateEndHeatMap)).listen((event) async {
-      for (var element in event) {
-        bool isMatching = false;
-
-        for (var heatmap in _heatmapRideCircles) {
-          if (heatmap.heatmap.heatmap_id == element.heatmap_id) {
-            isMatching = true;
-            break;
-          }
-        }
-
-        if (isMatching == false) {
-          _mapController.addCircle(CircleOptions(
-            geometry: LatLng(element.location.latitude, element.location.longitude),
-            circleRadius: showPickUps?10:0,
-            circleColor: '#FF0000',
-            circleOpacity: 0.05*element.passenger_count,
-          )
-          ).then((heatmap) {
-            _heatmapRideCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
-          });
-        }
-      }
-    });
+    List<JeepData> heatmapRide = await FireStoreDataBase().fetchHeatMapRide(route_choice, Timestamp.fromDate(_selectedDateStartHeatMap), Timestamp.fromDate(_selectedDateEndHeatMap));
+    _addCirclesRide(heatmapRide);
   }
 
   bool _isShowingCardRide = false;
@@ -370,12 +356,6 @@ class _DashboardState extends State<Dashboard> {
 
     for (var element in _heatmapDropCircles) {_mapController.removeCircle(element.data);}
     for (var element in _heatmapRideCircles) {_mapController.removeCircle(element.data);}
-
-    if(_showHeatMapTab){
-      heatmapRideListener.cancel();
-      heatmapDropListener.cancel();
-    }
-
   }
 
   Future<void> _subscribeHeatMap() async {

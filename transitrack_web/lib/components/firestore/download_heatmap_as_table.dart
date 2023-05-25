@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import 'package:transitrack_web/database_manager.dart';
 import 'package:universal_html/html.dart' as html;
 
 import '../../address_finder.dart';
@@ -13,23 +14,8 @@ import '../../models/heatmap_model.dart';
 
 
 Future<void> downloadHeatMapCollectionAsCSV(int routeId, Timestamp start, Timestamp end) async {
-  Query<Map<String, dynamic>> heatmapRef = FirebaseFirestore.instance
-      .collection('heatmap_ride')
-      .where('route_id', isEqualTo: routeId)
-      .where('timestamp', isGreaterThanOrEqualTo: start)
-      .where('timestamp', isLessThanOrEqualTo: end);
-
-  var querySnapshot = await heatmapRef.get();
-  var heatMapDataRideList = querySnapshot.docs.map((doc) => HeatMapData.fromSnapshot(doc)).toList();
-
-  heatmapRef = FirebaseFirestore.instance
-      .collection('heatmap_drop')
-      .where('route_id', isEqualTo: routeId)
-      .where('timestamp', isGreaterThanOrEqualTo: start)
-      .where('timestamp', isLessThanOrEqualTo: end);
-
-  querySnapshot = await heatmapRef.get();
-  var heatMapDataDropList = querySnapshot.docs.map((doc) => HeatMapData.fromSnapshot(doc)).toList();
+  var heatMapDataRideList = await FireStoreDataBase().fetchHeatMapRide(routeId, start, end);
+  var heatMapDataDropList = await FireStoreDataBase().fetchHeatMapDrop(routeId, start, end);
 
   Future<List<String>> getAddressFromLatLngList(List<dynamic> locations) async {
     List<Future<String>> addressFutures = locations.map((location) => getAddressFromLatLngFuture(location.latitude, location.longitude)).toList();
@@ -39,11 +25,11 @@ Future<void> downloadHeatMapCollectionAsCSV(int routeId, Timestamp start, Timest
   // Convert collection data to a CSV format
   List<List<dynamic>> csvData1 = [
     ['Heatmap for Pickups from ${DateFormat('MM-dd-yyyy').format(start.toDate())} to ${DateFormat('MM-dd-yyyy').format(end.toDate())}, Route: ${JeepRoutes[routeId].name}', ' ', ' ', ' ', ' '],
-    ['Heatmap ID', 'Location', 'Street', 'Passengers Taken', 'Timestamp'], // Replace with your field names
-    ...heatMapDataRideList.map((data) => [data.heatmap_id, '${data.location.latitude}, ${data.location.longitude}', '', data.passenger_count, DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate())]),[' ', ' ', ' ', ' ', ' '],
+    ['Heatmap ID', 'Location', 'Street', 'Timestamp'], // Replace with your field names
+    ...heatMapDataRideList.map((data) => [data.device_id, '${data.location.latitude}, ${data.location.longitude}', '', DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate())]),[' ', ' ', ' ', ' ', ' '],
     ['Heatmap for Drop Offs from ${DateFormat('MM-dd-yyyy').format(start.toDate())} to ${DateFormat('MM-dd-yyyy').format(end.toDate())}, Route: ${JeepRoutes[routeId].name}', ' ', ' ', ' ', ' '],
-    ['Heatmap ID', 'Location', 'Street', 'Passengers Dropped', 'Timestamp'],
-    ...heatMapDataDropList.map((data) => [data.heatmap_id, '${data.location.latitude}, ${data.location.longitude}', '', data.passenger_count, DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate())]),
+    ['Heatmap ID', 'Location', 'Street', 'Timestamp'],
+    ...heatMapDataDropList.map((data) => [data.device_id, '${data.location.latitude}, ${data.location.longitude}', '', DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate())]),
   ];
 
   List<dynamic> locations = heatMapDataRideList.map((data) => data.location).toList();

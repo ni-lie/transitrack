@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 
+import 'jeep_model.dart';
+
 class HeatMapData{
   String heatmap_id;
   Timestamp timestamp;
@@ -36,7 +38,7 @@ class HeatMapData{
 }
 
 class HeatMapEntity {
-  HeatMapData heatmap;
+  JeepData heatmap;
   Circle data;
 
   HeatMapEntity({
