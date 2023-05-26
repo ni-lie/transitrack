@@ -1837,74 +1837,77 @@ class _DashboardState extends State<Dashboard> {
                                               return Row(
                                                 children: [
                                                   Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                children: [
-                                                                  Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                    children: [
-                                                                      Row(
-                                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                        children: [
-                                                                          Text(
-                                                                            JeepRoutes[route_choice].name,
-                                                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                                                                            maxLines: 1,
-                                                                            overflow: TextOverflow.ellipsis,
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  RichText(
-                                                                    textAlign: TextAlign.center,
-                                                                    text: TextSpan(
+                                                    child: SingleChildScrollView(
+                                                      physics: const AlwaysScrollableScrollPhysics(),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Column(
+                                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                                       children: [
-                                                                        TextSpan(
-                                                                          text: '$operating',
-                                                                          style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                              color: Colors.white,
-                                                                              fontWeight: FontWeight.w600,
-                                                                              height: 0.5,
-                                                                              fontSize: 20
-                                                                          ),
-                                                                        ),
-                                                                        TextSpan(
-                                                                          text: "/${operating + not_operating}",
-                                                                          style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                              color: Colors.white,
-                                                                              fontWeight: FontWeight.w800,
-                                                                              fontSize: 14,
-                                                                              height: 0.5
-                                                                          ),
-                                                                        ),
-                                                                        TextSpan(
-                                                                          text: '\njeeps',
-                                                                          style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                            color: Colors.white54,
-                                                                            fontWeight: FontWeight.w600,
-                                                                            fontSize: 14,
-                                                                          ),
+                                                                        Row(
+                                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                          children: [
+                                                                            Text(
+                                                                              JeepRoutes[route_choice].name,
+                                                                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                                                              maxLines: 1,
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                            ),
+                                                                          ],
                                                                         ),
                                                                       ],
                                                                     ),
-                                                                  ),
-                                                                ],
+                                                                    RichText(
+                                                                      textAlign: TextAlign.center,
+                                                                      text: TextSpan(
+                                                                        children: [
+                                                                          TextSpan(
+                                                                            text: '$operating',
+                                                                            style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                height: 0.5,
+                                                                                fontSize: 20
+                                                                            ),
+                                                                          ),
+                                                                          TextSpan(
+                                                                            text: "/${operating + not_operating}",
+                                                                            style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white,
+                                                                                fontWeight: FontWeight.w800,
+                                                                                fontSize: 14,
+                                                                                height: 0.5
+                                                                            ),
+                                                                          ),
+                                                                          TextSpan(
+                                                                            text: '\noperating',
+                                                                            style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                              color: Colors.white54,
+                                                                              fontWeight: FontWeight.w600,
+                                                                              fontSize: 14,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(height: Constants.defaultPadding),
-                                                        const Divider(),
-                                                        isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
-                                                        _tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)
-                                                      ],
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: Constants.defaultPadding),
+                                                          const Divider(),
+                                                          isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
+                                                          _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
+                                                        ],
+                                                      ),
                                                     ),
                                                   ),
                                                 ],

@@ -68,7 +68,7 @@ class route_info_chart extends StatelessWidget {
                         ),
                       ),
                       TextSpan(
-                        text: '\njeeps',
+                        text: '\noperating',
                         style: Theme.of(context).textTheme.headline4?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
