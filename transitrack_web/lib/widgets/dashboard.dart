@@ -15,6 +15,7 @@ import '../components/firestore/download_heatmap_csv.dart';
 import '../components/firestore/download_historical_jeep_csv.dart';
 import '../components/header.dart';
 import '../components/jeep_info_card.dart';
+import '../components/jeep_info_card_detailed.dart';
 import '../components/route_info_chart.dart';
 import '../components/route_info_panel_shimmer_v2.dart';
 import '../components/select_jeep_info.dart';
@@ -1610,79 +1611,74 @@ class _DashboardState extends State<Dashboard> {
                                               var data = snapshot.data!;
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                               double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                              double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
                                               return Row(
                                                 children: [
                                                   Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                children: [
-                                                                  Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                                    children: [
-                                                                      Text(
-                                                                        JeepRoutes[route_choice].name,
-                                                                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                                                                        maxLines: 1,
-                                                                        overflow: TextOverflow.ellipsis,
-                                                                      ),
-                                                                      Text(
-                                                                        "${passenger_count} total passengers",
-                                                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                        textAlign: TextAlign.end,
-                                                                        maxLines: 1,
-                                                                        overflow: TextOverflow.ellipsis,
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  RichText(
-                                                                    textAlign: TextAlign.center,
-                                                                    text: TextSpan(
+                                                    child: SingleChildScrollView(
+                                                      physics: const AlwaysScrollableScrollPhysics(),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Column(
+                                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                                       children: [
-                                                                        TextSpan(
-                                                                          text: '$operating',
-                                                                          style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                              color: Colors.white,
-                                                                              fontWeight: FontWeight.w600,
-                                                                              height: 0.5,
-                                                                              fontSize: 20
-                                                                          ),
-                                                                        ),
-                                                                        TextSpan(
-                                                                          text: "/${operating + not_operating}",
-                                                                          style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                              color: Colors.white,
-                                                                              fontWeight: FontWeight.w800,
-                                                                              fontSize: 14,
-                                                                              height: 0.5
-                                                                          ),
-                                                                        ),
-                                                                        TextSpan(
-                                                                          text: '\njeeps',
-                                                                          style: Theme.of(context).textTheme.headline4?.copyWith(
-                                                                            color: Colors.white54,
-                                                                            fontWeight: FontWeight.w600,
-                                                                            fontSize: 14,
-                                                                          ),
+                                                                        Text(
+                                                                          JeepRoutes[route_choice].name,
+                                                                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                                                          maxLines: 1,
+                                                                          overflow: TextOverflow.ellipsis,
                                                                         ),
                                                                       ],
                                                                     ),
-                                                                  ),
-                                                                ],
+                                                                    RichText(
+                                                                      textAlign: TextAlign.center,
+                                                                      text: TextSpan(
+                                                                        children: [
+                                                                          TextSpan(
+                                                                            text: '$operating',
+                                                                            style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                height: 0.5,
+                                                                                fontSize: 20
+                                                                            ),
+                                                                          ),
+                                                                          TextSpan(
+                                                                            text: "/${operating + not_operating}",
+                                                                            style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white,
+                                                                                fontWeight: FontWeight.w800,
+                                                                                fontSize: 14,
+                                                                                height: 0.5
+                                                                            ),
+                                                                          ),
+                                                                          TextSpan(
+                                                                            text: '\njeeps',
+                                                                            style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                              color: Colors.white54,
+                                                                              fontWeight: FontWeight.w600,
+                                                                              fontSize: 14,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(height: Constants.defaultPadding),
-                                                        const Divider(),
-                                                        isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
-                                                      ],
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: Constants.defaultPadding),
+                                                          const Divider(),
+                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                        ],
+                                                      ),
                                                     ),
                                                   ),
                                                 ],
@@ -1724,13 +1720,6 @@ class _DashboardState extends State<Dashboard> {
                                                                             overflow: TextOverflow.ellipsis,
                                                                           ),
                                                                         ],
-                                                                      ),
-                                                                      Text(
-                                                                        "${passenger_count} total passengers",
-                                                                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                        textAlign: TextAlign.end,
-                                                                        maxLines: 1,
-                                                                        overflow: TextOverflow.ellipsis,
                                                                       ),
                                                                     ],
                                                                   ),
@@ -1828,7 +1817,6 @@ class _DashboardState extends State<Dashboard> {
                                             var data = snapshot.data!;
                                             double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                             double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                            double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
                                             return Container(
                                               decoration: const BoxDecoration(
                                                 color: Constants.secondaryColor,
@@ -1853,22 +1841,13 @@ class _DashboardState extends State<Dashboard> {
                                                                   overflow: TextOverflow.ellipsis,
                                                                 ),
                                                               ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  "${passenger_count} total passengers",
-                                                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                  textAlign: TextAlign.end,
-                                                                  maxLines: 2,
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                ),
-                                                              ),
                                                             ],
                                                           ),
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           const Divider(),
-                                                          isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
                                                         ],
                                                       ),
                                                     ),
@@ -1909,15 +1888,6 @@ class _DashboardState extends State<Dashboard> {
                                                                     JeepRoutes[route_choice].name,
                                                                     style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
                                                                     maxLines: 1,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                  ),
-                                                                ),
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    "${passenger_count} total passengers",
-                                                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white54),
-                                                                    textAlign: TextAlign.end,
-                                                                    maxLines: 2,
                                                                     overflow: TextOverflow.ellipsis,
                                                                   ),
                                                                 ),

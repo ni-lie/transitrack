@@ -7,8 +7,8 @@ import '../config/route_coordinates.dart';
 import '../models/jeep_model.dart';
 import '../style/constants.dart';
 
-class JeepInfoCard extends StatelessWidget {
-  JeepInfoCard({
+class JeepInfoCardDetailed extends StatelessWidget {
+  JeepInfoCardDetailed({
     super.key,
     required this.route_choice,
     required this.data,
@@ -81,6 +81,7 @@ class JeepInfoCard extends StatelessWidget {
               borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
                   height: 40,
@@ -92,8 +93,14 @@ class JeepInfoCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("${snapshot.data}", maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text("${data.passenger_count} passengers (${4-data.passenger_count} slots left)", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("${snapshot.data}", maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Text("Device ID: ${data.device_id}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Passenger count: ${data.passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Air Quality: ${data.air_qual.toStringAsFixed(2)} ppm", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Ambient Temperature: ${data.temp} °C", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Speed: ${data.speed} m/s", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        data.embark?Text("Passenger Embarked", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?Text("Passenger Disembarked", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):SizedBox()),
+                        Text("Timestamp: ${data.timestamp.toDate()}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )
                 ),
