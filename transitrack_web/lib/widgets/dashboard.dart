@@ -343,18 +343,17 @@ class _DashboardState extends State<Dashboard> {
     _jeeps.clear();
   }
 
-  void _stopListenHeatMap(){
-    if(heatMapSymbol != null){
-      _isShowingCardRide = false;
-      _mapController.removeSymbol(heatMapSymbol!);
-      heatMapSymbol = null;
-    }
-
-    for (var element in _heatmapDropCircles) {_mapController.removeCircle(element.data);}
-    for (var element in _heatmapRideCircles) {_mapController.removeCircle(element.data);}
+  void switchRoute(int routeChoice) {
+    _setRoute(routeChoice);
+    _stopListenJeep();
+    _subscribeToCoordinates();
+    _updateRoutes();
   }
 
   Future<void> _subscribeHeatMap() async {
+    setState((){
+      _tappedCircle = false;
+    });
     _subscribeToHeatMapRide();
     _subscribeToHeatMapDrop();
   }
@@ -371,7 +370,6 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         _selectedDateStartHeatMap = picked;
       });
-      _stopListenHeatMap();
       _subscribeHeatMap();
     }
     isMouseHoveringRouteInfo = false;
@@ -389,7 +387,6 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         _selectedDateEndHeatMap = picked;
       });
-      _stopListenHeatMap();
       _subscribeHeatMap();
     }
     isMouseHoveringRouteInfo = false;
@@ -495,11 +492,7 @@ class _DashboardState extends State<Dashboard> {
                       setState(() {
                         _isLoaded = false;
                       });
-                      _setRoute(0);
-                      _stopListenHeatMap();
-                      _stopListenJeep();
-                      _subscribeToCoordinates();
-                      _updateRoutes();
+                      switchRoute(0);
                     } : null),
                 DrawerListTile(
                     Route: JeepRoutes[1],
@@ -509,11 +502,7 @@ class _DashboardState extends State<Dashboard> {
                       setState(() {
                         _isLoaded = false;
                       });
-                      _setRoute(1);
-                      _stopListenHeatMap();
-                      _stopListenJeep();
-                      _subscribeToCoordinates();
-                      _updateRoutes();
+                      switchRoute(1);
                     } : null),
                 DrawerListTile(
                     Route: JeepRoutes[2],
@@ -523,11 +512,7 @@ class _DashboardState extends State<Dashboard> {
                       setState(() {
                         _isLoaded = false;
                       });
-                      _setRoute(2);
-                      _stopListenHeatMap();
-                      _stopListenJeep();
-                      _subscribeToCoordinates();
-                      _updateRoutes();
+                      switchRoute(2);
                     } : null),
                 DrawerListTile(
                     Route: JeepRoutes[3],
@@ -537,11 +522,7 @@ class _DashboardState extends State<Dashboard> {
                       setState(() {
                         _isLoaded = false;
                       });
-                      _setRoute(3);
-                      _stopListenHeatMap();
-                      _stopListenJeep();
-                      _subscribeToCoordinates();
-                      _updateRoutes();
+                      switchRoute(3);
                     } : null),
                 DrawerListTile(
                     Route: JeepRoutes[4],
@@ -551,11 +532,7 @@ class _DashboardState extends State<Dashboard> {
                       setState(() {
                         _isLoaded = false;
                       });
-                      _setRoute(4);
-                      _stopListenHeatMap();
-                      _stopListenJeep();
-                      _subscribeToCoordinates();
-                      _updateRoutes();
+                      switchRoute(4);
                     } : null),
                 const SizedBox(height: Constants.defaultPadding),
                 Container(
@@ -572,7 +549,15 @@ class _DashboardState extends State<Dashboard> {
                           if(_showHeatMapTab){
                             _subscribeHeatMap();
                           } else {
-                            _stopListenHeatMap();
+                            for (var heatmap in _heatmapRideCircles) {
+                              _mapController.removeCircle(heatmap.data);
+                            }
+                            _heatmapRideCircles.clear();
+
+                            for (var heatmap in _heatmapDropCircles) {
+                              _mapController.removeCircle(heatmap.data);
+                            }
+                            _heatmapDropCircles.clear();
                           }
                         },
                         child: Container(
@@ -1050,11 +1035,7 @@ class _DashboardState extends State<Dashboard> {
                                   setState(() {
                                     _isLoaded = false;
                                   });
-                                  _setRoute(0);
-                                  _stopListenHeatMap();
-                                  _stopListenJeep();
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
+                                  switchRoute(0);
                                 } : null),
                             DrawerListTile(
                                 Route: JeepRoutes[1],
@@ -1064,11 +1045,7 @@ class _DashboardState extends State<Dashboard> {
                                   setState(() {
                                     _isLoaded = false;
                                   });
-                                  _setRoute(1);
-                                  _stopListenHeatMap();
-                                  _stopListenJeep();
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
+                                  switchRoute(1);
                                 } : null),
                             DrawerListTile(
                                 Route: JeepRoutes[2],
@@ -1078,11 +1055,7 @@ class _DashboardState extends State<Dashboard> {
                                   setState(() {
                                     _isLoaded = false;
                                   });
-                                  _setRoute(2);
-                                  _stopListenHeatMap();
-                                  _stopListenJeep();
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
+                                  switchRoute(2);
                                 } : null),
                             DrawerListTile(
                                 Route: JeepRoutes[3],
@@ -1092,11 +1065,7 @@ class _DashboardState extends State<Dashboard> {
                                   setState(() {
                                     _isLoaded = false;
                                   });
-                                  _setRoute(3);
-                                  _stopListenHeatMap();
-                                  _stopListenJeep();
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
+                                  switchRoute(3);
                                 } : null),
                             DrawerListTile(
                                 Route: JeepRoutes[4],
@@ -1106,11 +1075,7 @@ class _DashboardState extends State<Dashboard> {
                                   setState(() {
                                     _isLoaded = false;
                                   });
-                                  _setRoute(4);
-                                  _stopListenHeatMap();
-                                  _stopListenJeep();
-                                  _subscribeToCoordinates();
-                                  _updateRoutes();
+                                  switchRoute(4);
                                 } : null),
                             const SizedBox(height: Constants.defaultPadding),
                             Container(
@@ -1127,7 +1092,15 @@ class _DashboardState extends State<Dashboard> {
                                       if(_showHeatMapTab){
                                         _subscribeHeatMap();
                                       } else {
-                                        _stopListenHeatMap();
+                                        for (var heatmap in _heatmapRideCircles) {
+                                          _mapController.removeCircle(heatmap.data);
+                                        }
+                                        _heatmapRideCircles.clear();
+
+                                        for (var heatmap in _heatmapDropCircles) {
+                                          _mapController.removeCircle(heatmap.data);
+                                        }
+                                        _heatmapDropCircles.clear();
                                       }
                                     },
                                     child: Container(
