@@ -15,6 +15,7 @@ class JeepData{
   List<double> gyroscope;
   double temp;
   double air_qual;
+  int slots_remaining;
 
   JeepData({
     required this.device_id,
@@ -29,7 +30,8 @@ class JeepData{
     required this.disembark,
     required this.gyroscope,
     required this.temp,
-    required this.air_qual
+    required this.air_qual,
+    required this.slots_remaining
   });
 
   factory JeepData.fromSnapshot(QueryDocumentSnapshot<Object?> snapshot) {
@@ -48,6 +50,7 @@ class JeepData{
     List<double> gyroscope = List.castFrom<dynamic, double>(data['gyroscope']);
     double temp = data['temp'] as double;
     double air_qual = data['air_qual'] as double;
+    int slots_remaining = data['slots_remaining'];
 
     return JeepData(
       device_id: device_id,
@@ -62,7 +65,8 @@ class JeepData{
       disembark: disembark,
       gyroscope: gyroscope,
       temp: temp,
-      air_qual: air_qual
+      air_qual: air_qual,
+      slots_remaining: slots_remaining
     );
   }
 }

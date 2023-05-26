@@ -12,10 +12,13 @@ class JeepInfoCardDetailed extends StatelessWidget {
     super.key,
     required this.route_choice,
     required this.data,
+    required this.isHeatMap
   });
 
   final int route_choice;
   final JeepData data;
+  final bool isHeatMap;
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -86,7 +89,7 @@ class JeepInfoCardDetailed extends StatelessWidget {
                 SizedBox(
                   height: 40,
                   width: 40,
-                  child: Image.asset(JeepFront[route_choice]),
+                  child: isHeatMap?(CircleAvatar(radius: 15, backgroundColor: data.embark?Colors.red:Colors.green)):Image.asset(JeepFront[route_choice]),
                 ),
                 const SizedBox(width: Constants.defaultPadding),
                 Expanded(
@@ -94,12 +97,14 @@ class JeepInfoCardDetailed extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("${snapshot.data}", maxLines: 2, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 5),
                         Text("Device ID: ${data.device_id}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Passenger count: ${data.passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Slots remaining: ${data.slots_remaining} slots", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Air Quality: ${data.air_qual.toStringAsFixed(2)} ppm", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Ambient Temperature: ${data.temp} °C", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Speed: ${data.speed} m/s", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        data.embark?Text("Passenger Embarked", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?Text("Passenger Disembarked", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):SizedBox()),
+                        data.embark?Text("Passenger Picked Up", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?Text("Passenger Dropped Off", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):SizedBox()),
                         Text("Timestamp: ${data.timestamp.toDate()}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )

@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../config/route_coordinates.dart';
 import '../style/constants.dart';
 
 class SelectJeepInfoCard extends StatelessWidget {
-  SelectJeepInfoCard({
+  const SelectJeepInfoCard({
     super.key,
+    required this.isHeatMap
   });
 
+  final bool isHeatMap;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -32,7 +33,7 @@ class SelectJeepInfoCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Select a vehicle", maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(isHeatMap?"Select a circle":"Select a vehicle", maxLines: 1, overflow: TextOverflow.ellipsis),
                   Text("for more information", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               )

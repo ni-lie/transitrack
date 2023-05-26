@@ -40,6 +40,9 @@ class _DashboardState extends State<Dashboard> {
   late MapboxMapController _mapController;
   late StreamSubscription<List<JeepData>> jeepListener;
 
+  double _opacityHeatmap = 0.1;
+  double _radiusHeatMap = 10;
+
   int route_choice = 0;
   List<JeepEntity> _jeeps = [];
   List<Line> _lines = [];
@@ -55,10 +58,12 @@ class _DashboardState extends State<Dashboard> {
   bool _isLoaded = false;
   bool showPickUps = false;
   bool showDropOffs = false;
+  bool _tappedCircle = false;
 
   bool _showHeatMapTab = false;
   bool _showJeepHistoryTab = false;
   bool _isListeningJeep = false;
+  bool _selectSettingsHeatMap = false;
   
   void _setRoute(int choice){
     setState(() {
@@ -80,6 +85,7 @@ class _DashboardState extends State<Dashboard> {
           textField: Jeepney.device_id,
           textOpacity: 0,
           iconRotate: 90 - angleDegrees,
+          iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0
       );
       _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
         _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
@@ -91,9 +97,9 @@ class _DashboardState extends State<Dashboard> {
     for (var element in Jeepneys) {
       _mapController.addCircle(CircleOptions(
           geometry: LatLng(element.location.latitude, element.location.longitude),
-          circleRadius: showDropOffs?10:0,
+          circleRadius: showDropOffs?_radiusHeatMap:0,
           circleColor: '#00FF00',
-          circleOpacity: 0.5
+          circleOpacity: _opacityHeatmap
       )
       ).then((heatmap) {
         _heatmapDropCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
@@ -105,9 +111,9 @@ class _DashboardState extends State<Dashboard> {
     for (var element in Jeepneys) {
       _mapController.addCircle(CircleOptions(
           geometry: LatLng(element.location.latitude, element.location.longitude),
-          circleRadius: showPickUps?10:0,
+          circleRadius: showPickUps?_radiusHeatMap:0,
           circleColor: '#FF0000',
-          circleOpacity: 0.5
+          circleOpacity: _opacityHeatmap
       )
       ).then((heatmap) {
         _heatmapRideCircles.add(HeatMapEntity(heatmap: element, data: heatmap));
@@ -241,40 +247,29 @@ class _DashboardState extends State<Dashboard> {
   }
 
   bool _isShowingCardRide = false;
-  LatLng? _clickedLatLng;
 
   void _onCircleTapped(Circle circle){
-    HeatMapEntity heatmap;
-    if(circle.options.circleColor == '#FF0000'){
-      heatmap = _heatmapRideCircles.firstWhere((element) => element.data == circle);
-    } else {
-      heatmap = _heatmapDropCircles.firstWhere((element) => element.data == circle);
-    }
 
     setState((){
       _isShowingCardRide = !_isShowingCardRide;
-      _clickedLatLng = heatmap.data.options.geometry as LatLng;
+      _tappedCircle = !_tappedCircle;
     });
 
-    if(_isShowingCardRide){
-      _mapController.addSymbol(SymbolOptions(
-        geometry: _clickedLatLng,
-        textField: (circle.options.circleColor == '#FF0000')?'${heatmap.heatmap.passenger_count} Passengers Picked Up':'${heatmap.heatmap.passenger_count} Passengers Dropped off',
-        iconImage: 'assets/heatmapBanner.png',
-        iconSize: 0.7,
-        textHaloWidth: circle.options.circleColor == '#FF0000'?1:-1,
-        textOffset: const Offset(0, -3),
-        iconOffset: const Offset(0, -69),
-        textColor: '#FFFFFF',
-        textMaxWidth: 10,
-      )).then((value) => heatMapSymbol = value);
+    if(_tappedCircle){
+      if(circle.options.circleColor == '#FF0000'){
+        pressedCircle = _heatmapRideCircles.firstWhere((element) => element.data == circle);
+      } else {
+        pressedCircle = _heatmapDropCircles.firstWhere((element) => element.data == circle);
+      }
+      _mapController.updateCircle(pressedCircle.data, CircleOptions(circleStrokeColor: "#FFFFFF", circleStrokeWidth: 3));
     } else {
-      _mapController.removeSymbol(heatMapSymbol!);
-      heatMapSymbol = null;
+      _mapController.updateCircle(pressedCircle.data, CircleOptions(circleStrokeWidth: 0));
     }
+
   }
 
   late JeepEntity pressedJeep;
+  late HeatMapEntity pressedCircle;
 
   void _onSymbolTapped(Symbol jeep){
     if(jeep.options.iconSize != 0.7){
@@ -701,7 +696,7 @@ class _DashboardState extends State<Dashboard> {
                                                 }
                                                 for (var element in _heatmapRideCircles) {
                                                   _mapController.updateCircle(element.data, CircleOptions(
-                                                    circleRadius: showPickUps?10:0,
+                                                    circleRadius: showPickUps?_radiusHeatMap:0,
                                                   ));
                                                 }
                                               });
@@ -748,7 +743,7 @@ class _DashboardState extends State<Dashboard> {
                                                 }
                                                 for (var element in _heatmapDropCircles) {
                                                   _mapController.updateCircle(element.data, CircleOptions(
-                                                    circleRadius: showDropOffs?10:0,
+                                                    circleRadius: showDropOffs?_radiusHeatMap:0,
                                                   ));
                                                 }
                                               });
@@ -816,13 +811,18 @@ class _DashboardState extends State<Dashboard> {
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Divider(),
-                                  Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
-                                  const SizedBox(width: Constants.defaultPadding),
-                                  Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
-                                  const SizedBox(width: Constants.defaultPadding),
+                                  Expanded(
+                                    child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
+                                          const SizedBox(width: Constants.defaultPadding),
+                                          Text('Historical Data', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)
+                                        ]
+                                    ),
+                                  ),
                                   if(_showJeepHistoryTab)
                                     DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
                                 ],
@@ -1147,10 +1147,26 @@ class _DashboardState extends State<Dashboard> {
                                             children: [
                                               Icon(Icons.data_usage_outlined, color: _showHeatMapTab?Colors.lightBlue:Colors.white70),
                                               const SizedBox(width: Constants.defaultPadding),
-                                              Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70)),
+                                              Expanded(child: Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis)),
                                               const Spacer(),
+
                                               if(_showHeatMapTab)
-                                                DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                                Row(
+                                                  children: [
+                                                    GestureDetector(
+                                                        onTap: (){
+                                                          setState(
+                                                                  (){
+                                                                _selectSettingsHeatMap = !_selectSettingsHeatMap;
+                                                              }
+                                                          );
+                                                        },
+                                                        child: Icon(Icons.settings, size: 20, color: _selectSettingsHeatMap?Colors.lightBlue:Colors.white38)),
+                                                    SizedBox(width: Constants.defaultPadding),
+                                                    DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+
+                                                  ],
+                                                ),
                                             ],
                                           ),
                                           if(_showHeatMapTab)
@@ -1158,6 +1174,149 @@ class _DashboardState extends State<Dashboard> {
                                               children: [
                                                 const SizedBox(height: Constants.defaultPadding/2),
                                                 const Divider(),
+
+                                                if(_selectSettingsHeatMap)
+                                                Column(
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Container(
+                                                              padding: const EdgeInsets.only(top: Constants.defaultPadding/2),
+                                                              child: const Text("Heatmap Radius", maxLines: 1, overflow: TextOverflow.ellipsis)
+                                                          ),
+                                                        ),
+                                                        
+                                                        Row(
+                                                          children: [
+                                                            Text("$_radiusHeatMap"),
+                                                            const SizedBox(width: Constants.defaultPadding),
+                                                            Column(
+                                                              children: [
+                                                                GestureDetector(
+                                                                  onTap: (){
+                                                                    setState(
+                                                                      (){
+                                                                        _radiusHeatMap += 2;
+                                                                      }
+                                                                    );
+
+                                                                    if(showPickUps){
+                                                                      for (var element in _heatmapRideCircles) {
+                                                                        _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                      }
+                                                                    }
+
+                                                                    if(showDropOffs){
+                                                                      for (var element in _heatmapDropCircles) {
+                                                                        _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                      }
+                                                                    }
+
+                                                                  },
+                                                                  child: const Icon(Icons.arrow_drop_up, color: Colors.lightBlue)),
+                                                                GestureDetector(
+                                                                  onTap: (){
+                                                                    if(_radiusHeatMap-2 > 0)
+                                                                    {
+                                                                      setState(
+                                                                              (){
+                                                                            _radiusHeatMap -= 2;
+                                                                          }
+                                                                      );
+                                                                      if(showPickUps){
+                                                                        for (var element in _heatmapRideCircles) {
+                                                                          _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                        }
+                                                                      }
+
+                                                                      if(showDropOffs){
+                                                                        for (var element in _heatmapDropCircles) {
+                                                                          _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  child: const Icon(Icons.arrow_drop_down, color: Colors.lightBlue))
+                                                              ]
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Container(
+                                                              padding: const EdgeInsets.symmetric(vertical: Constants.defaultPadding/2),
+                                                              child: const Text("Heatmap Intensity", maxLines: 1, overflow: TextOverflow.ellipsis)
+                                                          ),
+                                                        ),
+
+                                                        Row(
+                                                          children: [
+                                                            Text("${_opacityHeatmap.toStringAsFixed(2)}"),
+                                                            const SizedBox(width: Constants.defaultPadding),
+                                                            Column(
+                                                                children: [
+                                                                  GestureDetector(
+                                                                      onTap: (){
+                                                                        if(_opacityHeatmap+0.02 < 1)
+                                                                          {
+                                                                            setState(
+                                                                                    (){
+                                                                                  _opacityHeatmap += 0.02;
+                                                                                }
+                                                                            );
+
+                                                                            if(showPickUps){
+                                                                              for (var element in _heatmapRideCircles) {
+                                                                                _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                              }
+                                                                            }
+
+                                                                            if(showDropOffs){
+                                                                              for (var element in _heatmapDropCircles) {
+                                                                                _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                      },
+                                                                      child: const Icon(Icons.arrow_drop_up, color: Colors.lightBlue)),
+                                                                  GestureDetector(
+                                                                      onTap: (){
+                                                                        if(_opacityHeatmap-0.02 > 0)
+                                                                        {
+                                                                          setState(
+                                                                            (){
+                                                                                _opacityHeatmap -= 0.02;
+                                                                              }
+                                                                          );
+                                                                          if(showPickUps){
+                                                                            for (var element in _heatmapRideCircles) {
+                                                                              _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                            }
+                                                                          }
+
+                                                                          if(showDropOffs){
+                                                                            for (var element in _heatmapDropCircles) {
+                                                                              _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      child: const Icon(Icons.arrow_drop_down, color: Colors.lightBlue))
+                                                                ]
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const Divider(),
+                                                  ],
+                                                ),
                                                 const SizedBox(height: Constants.defaultPadding/2),
                                                 Row(
                                                   children:
@@ -1251,7 +1410,7 @@ class _DashboardState extends State<Dashboard> {
                                                             }
                                                             for (var element in _heatmapRideCircles) {
                                                               _mapController.updateCircle(element.data, CircleOptions(
-                                                                circleRadius: showPickUps?10:0,
+                                                                circleRadius: showPickUps?_radiusHeatMap:0,
                                                               ));
                                                             }
                                                           });
@@ -1298,7 +1457,7 @@ class _DashboardState extends State<Dashboard> {
                                                             }
                                                             for (var element in _heatmapDropCircles) {
                                                               _mapController.updateCircle(element.data, CircleOptions(
-                                                                circleRadius: showDropOffs?10:0,
+                                                                circleRadius: showDropOffs?_radiusHeatMap:0,
                                                               ));
                                                             }
                                                           });
@@ -1366,12 +1525,19 @@ class _DashboardState extends State<Dashboard> {
                                       child: Column(
                                         children: [
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
-                                              const SizedBox(width: Constants.defaultPadding),
-                                              Expanded(child: Text('Jeep Analysis', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)),
-                                              Spacer(),
+                                              Expanded(
+                                                child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.start,
+                                                    children: [
+                                                      Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
+                                                      const SizedBox(width: Constants.defaultPadding),
+                                                      Text('Historical Data', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)
+                                                  ]
+                                                ),
+                                              ),
+
                                               if(_showJeepHistoryTab)
                                                 DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
                                             ],
@@ -1676,7 +1842,8 @@ class _DashboardState extends State<Dashboard> {
                                                           ),
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           const Divider(),
-                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
+                                                          _tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)
                                                         ],
                                                       ),
                                                     ),
@@ -1694,7 +1861,6 @@ class _DashboardState extends State<Dashboard> {
                                               var data = snapshot.data!;
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                               double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                              double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
                                               return Row(
                                                 children: [
                                                   Expanded(
@@ -1763,7 +1929,8 @@ class _DashboardState extends State<Dashboard> {
                                                         ),
                                                         const SizedBox(height: Constants.defaultPadding),
                                                         const Divider(),
-                                                        isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                        isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
+                                                        _tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)
                                                       ],
                                                     ),
                                                   ),
@@ -1847,7 +2014,8 @@ class _DashboardState extends State<Dashboard> {
                                                           route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           const Divider(),
-                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
+                                                          _tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)
                                                         ],
                                                       ),
                                                     ),
@@ -1897,7 +2065,8 @@ class _DashboardState extends State<Dashboard> {
                                                             route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
                                                             const SizedBox(height: Constants.defaultPadding),
                                                             const Divider(),
-                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard()
+                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
+                                                            _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
                                                           ],
                                                         ),
                                                       ),
