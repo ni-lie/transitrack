@@ -25,11 +25,11 @@ Future<void> downloadHeatMapCollectionAsCSV(int routeId, Timestamp start, Timest
   // Convert collection data to a CSV format
   List<List<dynamic>> csvData1 = [
     ['Heatmap for Pickups from ${DateFormat('MM-dd-yyyy').format(start.toDate())} to ${DateFormat('MM-dd-yyyy').format(end.toDate())}, Route: ${JeepRoutes[routeId].name}', ' ', ' ', ' ', ' '],
-    ['Heatmap ID', 'Location', 'Street', 'Timestamp'], // Replace with your field names
-    ...heatMapDataRideList.map((data) => [data.device_id, '${data.location.latitude}, ${data.location.longitude}', '', DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate())]),[' ', ' ', ' ', ' ', ' '],
+    ['Timestamp', 'Device ID', 'Passenger Count', 'Location', 'Street',  'Acceleration', 'Air quality', 'Gyroscope', 'Speed', 'Ambient Temperature'],
+    ...heatMapDataRideList.map((data) => [DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate()), data.device_id, data.passenger_count, '${data.location.latitude}, ${data.location.longitude}', '', data.acceleration, data.air_qual, data.gyroscope, data.speed, data.temp]),[' ', ' ', ' ', ' ', ' '],
     ['Heatmap for Drop Offs from ${DateFormat('MM-dd-yyyy').format(start.toDate())} to ${DateFormat('MM-dd-yyyy').format(end.toDate())}, Route: ${JeepRoutes[routeId].name}', ' ', ' ', ' ', ' '],
-    ['Heatmap ID', 'Location', 'Street', 'Timestamp'],
-    ...heatMapDataDropList.map((data) => [data.device_id, '${data.location.latitude}, ${data.location.longitude}', '', DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate())]),
+    ['Timestamp', 'Device ID', 'Passenger Count', 'Location', 'Street',  'Acceleration', 'Air quality', 'Gyroscope', 'Speed', 'Ambient Temperature'],
+    ...heatMapDataDropList.map((data) => [DateFormat('MM-dd-yyyy-HH:mm:ss').format(data.timestamp.toDate()), data.device_id, data.passenger_count, '${data.location.latitude}, ${data.location.longitude}', '', data.acceleration, data.air_qual, data.gyroscope, data.speed, data.temp]),
   ];
 
   List<dynamic> locations = heatMapDataRideList.map((data) => data.location).toList();
@@ -37,7 +37,7 @@ Future<void> downloadHeatMapCollectionAsCSV(int routeId, Timestamp start, Timest
   int prev = 0;
 
   for (int i = 0; i < addresses.length; i++) {
-    csvData1[i + 2][2] = addresses[i];
+    csvData1[i + 2][4] = addresses[i];
     prev++;
   }
 
@@ -45,7 +45,7 @@ Future<void> downloadHeatMapCollectionAsCSV(int routeId, Timestamp start, Timest
   addresses = await getAddressFromLatLngList(locations);
 
   for (int i = 0; i < addresses.length; i++) {
-    csvData1[prev + i + 5][2] = addresses[i];
+    csvData1[prev + i + 5][4] = addresses[i];
   }
 
   String csvContent = const ListToCsvConverter().convert(csvData1);
