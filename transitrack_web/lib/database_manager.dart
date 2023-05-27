@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'models/heatmap_model.dart';
 import 'models/jeep_model.dart';
 
 class FireStoreDataBase{
@@ -13,11 +12,13 @@ class FireStoreDataBase{
   }
 
   Future<List<JeepData>> getLatestJeepDataPerDeviceIdFuturev2(int routeId, Timestamp timestamp) async {
+    List<JeepData> jeepDataList = [];
+    if(routeId == -1){
+      return jeepDataList;
+    }
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('jeeps_historical')
         .get();
-
-    List<JeepData> jeepDataList = [];
 
     for (QueryDocumentSnapshot jeepDocument in querySnapshot.docs) {
       QuerySnapshot subcollectionSnapshot = await jeepDocument.reference
@@ -39,6 +40,10 @@ class FireStoreDataBase{
   }
 
   Future<List<JeepData>> getLatestJeepDataAnalysisPerDeviceIdFuture(int routeId, Timestamp timestamp) async {
+    List<JeepData> jeepDataList = [];
+    if(routeId == -1){
+      return jeepDataList;
+    }
     // Access the Firestore instance
     FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -75,9 +80,6 @@ class FireStoreDataBase{
       }
     }
 
-    // Create a list to store the JeepData objects
-    List<JeepData> jeepDataList = [];
-
     // Iterate through the latest documents and convert them to JeepData objects
     latestDocuments.values.forEach((snapshot) {
       JeepData jeepData = JeepData.fromSnapshot(snapshot);
@@ -88,11 +90,16 @@ class FireStoreDataBase{
   }
 
   Future<List<JeepData>> fetchHeatMapRide(int route_id, Timestamp start, Timestamp end) async {
+    List<JeepData> jeepDataList = [];
+    if(route_id == -1){
+      return jeepDataList;
+    }
+
     QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
         .collection('jeeps_historical')
         .get();
 
-    List<JeepData> jeepDataList = [];
+
 
     for (QueryDocumentSnapshot<Map<String, dynamic>> jeepDocument in querySnapshot.docs) {
       QuerySnapshot<Map<String, dynamic>> subcollectionSnapshot = await jeepDocument.reference
@@ -116,11 +123,14 @@ class FireStoreDataBase{
   }
 
   Future<List<JeepData>> fetchHeatMapDrop(int route_id, Timestamp start, Timestamp end) async {
+    List<JeepData> jeepDataList = [];
+    if(route_id == -1){
+      return jeepDataList;
+    }
+
     QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
         .collection('jeeps_historical')
         .get();
-
-    List<JeepData> jeepDataList = [];
 
     for (QueryDocumentSnapshot<Map<String, dynamic>> jeepDocument in querySnapshot.docs) {
       QuerySnapshot<Map<String, dynamic>> subcollectionSnapshot = await jeepDocument.reference
@@ -144,6 +154,11 @@ class FireStoreDataBase{
   }
 
   Future<List<JeepData>> loadJeepsByRouteId(int routeId) async {
+    if(routeId == -1){
+      List<JeepData> jeepDataList = [];
+      return jeepDataList;
+    }
+
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('jeeps_realtime')
         .where('route_id', isEqualTo: routeId)

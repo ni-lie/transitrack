@@ -27,33 +27,33 @@ class ShimmerDesktopRouteInfo extends StatelessWidget {
                   flex: 3,
                   child: ShimmerWidget(height: 25)),
               const Spacer(),
-              Expanded(
-                  flex: 2,
-                  child: ShimmerWidget(height: 25))
             ],
           ),
           const SizedBox(height: Constants.defaultPadding),
-          Shimmer.fromColors(
-              baseColor: Colors.grey.withOpacity(0.5),
-              highlightColor: Colors.white.withOpacity(0.2),
-              child: SizedBox(
-                height: 200,
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 70,
-                    startDegreeOffset: -90,
-                    sections: [
-                      PieChartSectionData(
-                        color: Colors.white70,
-                        value: 1,
-                        showTitle: false,
-                        radius: 20,
-                      ),
-                    ],
+          SizedBox(
+            height: 200,
+            child: Shimmer.fromColors(
+                baseColor: Colors.grey.withOpacity(0.5),
+                highlightColor: Colors.white.withOpacity(0.2),
+                child: SizedBox(
+                  height: 200,
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 0,
+                      centerSpaceRadius: 70,
+                      startDegreeOffset: -90,
+                      sections: [
+                        PieChartSectionData(
+                          color: Colors.white70,
+                          value: 1,
+                          showTitle: false,
+                          radius: 20,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
+                )
+            ),
           ),
           const SizedBox(height: Constants.defaultPadding),
           const Divider(),

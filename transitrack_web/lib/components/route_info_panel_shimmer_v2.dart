@@ -19,7 +19,6 @@ class RouteInfoShimmerV2 extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     ShimmerWidget(height: 20, width: 150),
-                    ShimmerWidget(height: 20, width: 100),
                   ]
               ),
               const SizedBox(height: Constants.defaultPadding/2),

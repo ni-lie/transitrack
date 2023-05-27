@@ -43,15 +43,13 @@ class _DashboardState extends State<Dashboard> {
   double _opacityHeatmap = 0.1;
   double _radiusHeatMap = 10;
 
-  int route_choice = 0;
+  int route_choice = -1;
   List<JeepEntity> _jeeps = [];
   List<Line> _lines = [];
   List<HeatMapEntity> _heatmapRideCircles = [];
   List<HeatMapEntity> _heatmapDropCircles = [];
   bool isMouseHoveringRouteInfo = false;
   bool isMouseHoveringDrawer = false;
-
-  Symbol? heatMapSymbol;
 
   bool isHoverJeep = false;
   int hoveredJeep = -1;
@@ -64,6 +62,7 @@ class _DashboardState extends State<Dashboard> {
   bool _showJeepHistoryTab = false;
   bool _isListeningJeep = false;
   bool _selectSettingsHeatMap = false;
+
   
   void _setRoute(int choice){
     setState(() {
@@ -180,10 +179,11 @@ class _DashboardState extends State<Dashboard> {
     }
     _lines.clear();
 
-    _mapController.addLine(Routes.RouteLines[route_choice]).then((line) {
-      _lines.add(line);
-    });
-
+    if(route_choice != -1){
+      _mapController.addLine(Routes.RouteLines[route_choice]).then((line) {
+        _lines.add(line);
+      });
+    }
   }
 
 
@@ -204,18 +204,20 @@ class _DashboardState extends State<Dashboard> {
         List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
         _addSymbols(test);
 
-        jeepListener = FireStoreDataBase().fetchJeepData(route_choice).listen((event) async {
-          if(event.isNotEmpty){
-            for (var element in event) {
-              if (element.route_id == route_choice){
-                _updateSymbols(event);
+        if(route_choice != -1){
+          jeepListener = FireStoreDataBase().fetchJeepData(route_choice).listen((event) async {
+            if(event.isNotEmpty){
+              for (var element in event) {
+                if (element.route_id == route_choice){
+                  _updateSymbols(event);
+                }
               }
+            } else {
+              _updateSymbols([]);
             }
-          } else {
-            _updateSymbols([]);
-          }
-        });
-
+          });
+        }
+        
         _isListeningJeep = true;
         setState(() {
           _isLoaded = true;
@@ -294,25 +296,18 @@ class _DashboardState extends State<Dashboard> {
                 iconOpacity: 1
             ));
           } else {
-            _mapController.updateSymbol(element.data, const SymbolOptions(
+            _mapController.updateSymbol(element.data, SymbolOptions(
                 iconSize: 0.1,
-                iconOpacity: 0.4
+                iconOpacity: element.jeep.is_active?0.4:0
             ));
           }
         }
       } else {
         for (var element in _jeeps) {
-          if (element.jeep.device_id == pressedJeep.jeep.device_id){
-            _mapController.updateSymbol(element.data, const SymbolOptions(
-                iconSize: 0.1,
-                iconOpacity: 1
-            ));
-          } else {
-            _mapController.updateSymbol(element.data, const SymbolOptions(
-                iconOpacity: 1,
-                iconSize: 0.1
-            ));
-          }
+          _mapController.updateSymbol(element.data, SymbolOptions(
+              iconSize: 0.1,
+              iconOpacity: element.jeep.is_active?1:0
+          ));
         }
       }
     }
@@ -320,12 +315,12 @@ class _DashboardState extends State<Dashboard> {
 
   void _onMapCreated(MapboxMapController controller) {
     _mapController = controller;
+
     _mapController.onCircleTapped.add(_onCircleTapped);
     _mapController.onSymbolTapped.add(_onSymbolTapped);
-    Future.delayed(const Duration(seconds: 3), () async {
-      _updateRoutes();
-      await _subscribeToCoordinates();
-    });
+
+
+    _isLoaded = true;
 
   }
 
@@ -488,52 +483,72 @@ class _DashboardState extends State<Dashboard> {
                     Route: JeepRoutes[0],
                     icon: Image.asset(JeepSide[0]),
                     isSelected: route_choice == 0,
-                    press: route_choice != 0? (){
-                      setState(() {
-                        _isLoaded = false;
-                      });
-                      switchRoute(0);
-                    } : null),
+                    press: (){
+                      if(route_choice == 0){
+                        switchRoute(-1);
+                      } else {
+                        setState(() {
+                          _isLoaded = false;
+                        });
+                        switchRoute(0);
+                      }
+                    }),
                 DrawerListTile(
                     Route: JeepRoutes[1],
                     icon: Image.asset(JeepSide[1]),
                     isSelected: route_choice == 1,
-                    press: route_choice != 1? (){
-                      setState(() {
-                        _isLoaded = false;
-                      });
-                      switchRoute(1);
-                    } : null),
+                    press: (){
+                      if(route_choice == 1){
+                        switchRoute(-1);
+                      } else {
+                        setState(() {
+                          _isLoaded = false;
+                        });
+                        switchRoute(1);
+                      }
+                    }),
                 DrawerListTile(
                     Route: JeepRoutes[2],
                     icon: Image.asset(JeepSide[2]),
                     isSelected: route_choice == 2,
-                    press: route_choice != 2? (){
-                      setState(() {
-                        _isLoaded = false;
-                      });
-                      switchRoute(2);
-                    } : null),
+                    press: (){
+                      if(route_choice == 2){
+                        switchRoute(-1);
+                      } else {
+                        setState(() {
+                          _isLoaded = false;
+                        });
+                        switchRoute(2);
+                      }
+                    }),
                 DrawerListTile(
                     Route: JeepRoutes[3],
                     icon: Image.asset(JeepSide[3]),
                     isSelected: route_choice == 3,
-                    press: route_choice != 3? (){
-                      setState(() {
-                        _isLoaded = false;
-                      });
-                      switchRoute(3);
-                    } : null),
+                    press: (){
+                      if(route_choice == 3){
+                        switchRoute(-1);
+                      } else {
+                        setState(() {
+                          _isLoaded = false;
+                        });
+                        switchRoute(3);
+                      }
+                    }),
                 DrawerListTile(
                     Route: JeepRoutes[4],
                     icon: Image.asset(JeepSide[4]),
                     isSelected: route_choice == 4,
-                    press: route_choice != 4? (){
-                      setState(() {
-                        _isLoaded = false;
-                      });
-                      switchRoute(4);
-                    } : null),
+                    press: (){
+                      if(route_choice == 4){
+                        switchRoute(-1);
+                      } else {
+                        setState(() {
+                          _isLoaded = false;
+                        });
+                        switchRoute(4);
+                      }
+                    }),
                 const SizedBox(height: Constants.defaultPadding),
                 Container(
                     padding: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
@@ -666,19 +681,6 @@ class _DashboardState extends State<Dashboard> {
                                             onTap: (){
                                               setState((){
                                                 showPickUps = !showPickUps;
-                                                if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
-                                                  if(showPickUps){
-                                                    _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                      iconOpacity: 1,
-                                                      textOpacity: 1,
-                                                    ));
-                                                  } else {
-                                                    _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                        iconOpacity: 0,
-                                                        textOpacity: 0
-                                                    ));
-                                                  }
-                                                }
                                                 for (var element in _heatmapRideCircles) {
                                                   _mapController.updateCircle(element.data, CircleOptions(
                                                     circleRadius: showPickUps?_radiusHeatMap:0,
@@ -713,19 +715,6 @@ class _DashboardState extends State<Dashboard> {
                                             onTap: (){
                                               setState((){
                                                 showDropOffs = !showDropOffs;
-                                                if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
-                                                  if(showDropOffs){
-                                                    _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                      iconOpacity: 1,
-                                                      textOpacity: 1,
-                                                    ));
-                                                  } else {
-                                                    _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                        iconOpacity: 0,
-                                                        textOpacity: 0
-                                                    ));
-                                                  }
-                                                }
                                                 for (var element in _heatmapDropCircles) {
                                                   _mapController.updateCircle(element.data, CircleOptions(
                                                     circleRadius: showDropOffs?_radiusHeatMap:0,
@@ -1031,52 +1020,72 @@ class _DashboardState extends State<Dashboard> {
                                 Route: JeepRoutes[0],
                                 icon: Image.asset(JeepSide[0]),
                                 isSelected: route_choice == 0,
-                                press: route_choice != 0? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  switchRoute(0);
-                                } : null),
+                                press: (){
+                                  if(route_choice == 0){
+                                    switchRoute(-1);
+                                  } else {
+                                    setState(() {
+                                      _isLoaded = false;
+                                    });
+                                    switchRoute(0);
+                                  }
+                                }),
                             DrawerListTile(
                                 Route: JeepRoutes[1],
                                 icon: Image.asset(JeepSide[1]),
                                 isSelected: route_choice == 1,
-                                press: route_choice != 1? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  switchRoute(1);
-                                } : null),
+                                press: (){
+                                  if(route_choice == 1){
+                                    switchRoute(-1);
+                                  } else {
+                                    setState(() {
+                                      _isLoaded = false;
+                                    });
+                                    switchRoute(1);
+                                  }
+                                }),
                             DrawerListTile(
                                 Route: JeepRoutes[2],
                                 icon: Image.asset(JeepSide[2]),
                                 isSelected: route_choice == 2,
-                                press: route_choice != 2? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  switchRoute(2);
-                                } : null),
+                                press: (){
+                                  if(route_choice == 2){
+                                    switchRoute(-1);
+                                  } else {
+                                    setState(() {
+                                      _isLoaded = false;
+                                    });
+                                    switchRoute(2);
+                                  }
+                                }),
                             DrawerListTile(
                                 Route: JeepRoutes[3],
                                 icon: Image.asset(JeepSide[3]),
                                 isSelected: route_choice == 3,
-                                press: route_choice != 3? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  switchRoute(3);
-                                } : null),
+                                press: (){
+                                  if(route_choice == 3){
+                                    switchRoute(-1);
+                                  } else {
+                                    setState(() {
+                                      _isLoaded = false;
+                                    });
+                                    switchRoute(3);
+                                  }
+                                }),
                             DrawerListTile(
                                 Route: JeepRoutes[4],
                                 icon: Image.asset(JeepSide[4]),
                                 isSelected: route_choice == 4,
-                                press: route_choice != 4? (){
-                                  setState(() {
-                                    _isLoaded = false;
-                                  });
-                                  switchRoute(4);
-                                } : null),
+                                press: (){
+                                  if(route_choice == 4){
+                                    switchRoute(-1);
+                                  } else {
+                                    setState(() {
+                                      _isLoaded = false;
+                                    });
+                                    switchRoute(4);
+                                  }
+                                }),
                             const SizedBox(height: Constants.defaultPadding),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: Constants.defaultPadding),
@@ -1368,19 +1377,6 @@ class _DashboardState extends State<Dashboard> {
                                                         onTap: (){
                                                           setState((){
                                                             showPickUps = !showPickUps;
-                                                            if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == 1.0){
-                                                              if(showPickUps){
-                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                  iconOpacity: 1,
-                                                                  textOpacity: 1,
-                                                                ));
-                                                              } else {
-                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                    iconOpacity: 0,
-                                                                    textOpacity: 0
-                                                                ));
-                                                              }
-                                                            }
                                                             for (var element in _heatmapRideCircles) {
                                                               _mapController.updateCircle(element.data, CircleOptions(
                                                                 circleRadius: showPickUps?_radiusHeatMap:0,
@@ -1415,19 +1411,6 @@ class _DashboardState extends State<Dashboard> {
                                                         onTap: (){
                                                           setState((){
                                                             showDropOffs = !showDropOffs;
-                                                            if(heatMapSymbol != null && heatMapSymbol?.options.textHaloWidth == -1.0){
-                                                              if(showDropOffs){
-                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                  iconOpacity: 1,
-                                                                  textOpacity: 1,
-                                                                ));
-                                                              } else {
-                                                                _mapController.updateSymbol(heatMapSymbol!, const SymbolOptions(
-                                                                    iconOpacity: 0,
-                                                                    textOpacity: 0
-                                                                ));
-                                                              }
-                                                            }
                                                             for (var element in _heatmapDropCircles) {
                                                               _mapController.updateCircle(element.data, CircleOptions(
                                                                 circleRadius: showDropOffs?_radiusHeatMap:0,
@@ -1740,7 +1723,7 @@ class _DashboardState extends State<Dashboard> {
                                         decoration: const BoxDecoration(
                                           color: Constants.secondaryColor,
                                         ),
-                                        child: _showJeepHistoryTab
+                                        child: route_choice == -1?const RouteInfoShimmerV2():(_showJeepHistoryTab
                                         ?FutureBuilder(
                                             future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
                                             builder: (context, snapshot){
@@ -1776,7 +1759,7 @@ class _DashboardState extends State<Dashboard> {
                                                                       ],
                                                                     ),
                                                                     RichText(
-                                                                      textAlign: TextAlign.center,
+                                                                      textAlign: TextAlign.right,
                                                                       text: TextSpan(
                                                                         children: [
                                                                           TextSpan(
@@ -1789,7 +1772,7 @@ class _DashboardState extends State<Dashboard> {
                                                                             ),
                                                                           ),
                                                                           TextSpan(
-                                                                            text: "/${operating + not_operating}",
+                                                                            text: "/${operating + not_operating} jeepneys",
                                                                             style: Theme.of(context).textTheme.headline4?.copyWith(
                                                                                 color: Colors.white,
                                                                                 fontWeight: FontWeight.w800,
@@ -1798,7 +1781,7 @@ class _DashboardState extends State<Dashboard> {
                                                                             ),
                                                                           ),
                                                                           TextSpan(
-                                                                            text: '\njeeps',
+                                                                            text: '\noperating',
                                                                             style: Theme.of(context).textTheme.headline4?.copyWith(
                                                                               color: Colors.white54,
                                                                               fontWeight: FontWeight.w600,
@@ -1816,7 +1799,7 @@ class _DashboardState extends State<Dashboard> {
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           const Divider(),
                                                           isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
-                                                          _tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)
+                                                          _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
                                                         ],
                                                       ),
                                                     ),
@@ -1865,7 +1848,7 @@ class _DashboardState extends State<Dashboard> {
                                                                       ],
                                                                     ),
                                                                     RichText(
-                                                                      textAlign: TextAlign.center,
+                                                                      textAlign: TextAlign.right,
                                                                       text: TextSpan(
                                                                         children: [
                                                                           TextSpan(
@@ -1878,7 +1861,7 @@ class _DashboardState extends State<Dashboard> {
                                                                             ),
                                                                           ),
                                                                           TextSpan(
-                                                                            text: "/${operating + not_operating}",
+                                                                            text: "/${operating + not_operating} jeepneys",
                                                                             style: Theme.of(context).textTheme.headline4?.copyWith(
                                                                                 color: Colors.white,
                                                                                 fontWeight: FontWeight.w800,
@@ -1913,6 +1896,7 @@ class _DashboardState extends State<Dashboard> {
                                                 ],
                                               );
                                             }
+                                        )
                                         )
                                       )
                                     ]),
@@ -1950,7 +1934,38 @@ class _DashboardState extends State<Dashboard> {
                                           color: Constants.secondaryColor,
                                           borderRadius: BorderRadius.all(Radius.circular(10)),
                                         ),
-                                        child: _showJeepHistoryTab
+                                        child: route_choice==-1?Container(
+                                          padding: const EdgeInsets.all(Constants.defaultPadding),
+                                          decoration: const BoxDecoration(
+                                            color: Constants.secondaryColor,
+                                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                                          ),
+                                          child: const Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Select a route",
+                                                style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              SizedBox(height: Constants.defaultPadding),
+                                              SizedBox(
+                                                height:200,
+                                                child: Center(child: CircleAvatar(
+                                                radius: 90,
+                                                  backgroundColor: Colors.white38,
+                                                  child: CircleAvatar(
+                                                        radius: 70,
+                                                      backgroundColor: Constants.secondaryColor,
+                                                      child: Icon(Icons.touch_app_rounded, color: Colors.white38, size: 50)
+                                                  ),
+                                                )),
+                                              ),
+                                              SizedBox(height: Constants.defaultPadding),
+                                            ],
+                                          ),
+                                        ):(_showJeepHistoryTab
                                           ?FutureBuilder(
                                           future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
                                           builder: (context, snapshot) {
@@ -1991,7 +2006,7 @@ class _DashboardState extends State<Dashboard> {
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           const Divider(),
                                                           isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
-                                                          _tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)
+                                                          _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
                                                         ],
                                                       ),
                                                     ),
@@ -2010,7 +2025,6 @@ class _DashboardState extends State<Dashboard> {
                                               var data = snapshot.data!;
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                               double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                              double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
                                               return Container(
                                                 decoration: const BoxDecoration(
                                                   color: Constants.secondaryColor,
@@ -2051,7 +2065,8 @@ class _DashboardState extends State<Dashboard> {
                                                 ),
                                               );
                                             }
-                                        ),
+                                        )
+                                        )
                                       )
                                     ),
                                   ),
