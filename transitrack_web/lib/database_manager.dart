@@ -99,8 +99,6 @@ class FireStoreDataBase{
         .collection('jeeps_historical')
         .get();
 
-
-
     for (QueryDocumentSnapshot<Map<String, dynamic>> jeepDocument in querySnapshot.docs) {
       QuerySnapshot<Map<String, dynamic>> subcollectionSnapshot = await jeepDocument.reference
           .collection('timeline')

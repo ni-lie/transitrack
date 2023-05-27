@@ -75,15 +75,15 @@ class _DashboardState extends State<Dashboard> {
       isHoverJeep = false;
     });
     for (var Jeepney in Jeepneys) {
-      double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
-      double angleDegrees = angleRadians * (180 / pi);
+      // double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
+      // double angleDegrees = angleRadians * (180 / pi);
       final jeepEntity = SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconSize: 0.1,
           iconImage: JeepRoutes[route_choice].image,
           textField: Jeepney.device_id,
           textOpacity: 0,
-          iconRotate: 90 - angleDegrees,
+          iconRotate: Jeepney.gyroscope[0],
           iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0
       );
       _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
@@ -137,8 +137,8 @@ class _DashboardState extends State<Dashboard> {
           pressedJeep.jeep = Jeepney;
         }
       }
-      double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
-      double angleDegrees = angleRadians * (180 / pi);
+      // double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
+      // double angleDegrees = angleRadians * (180 / pi);
       if(_jeeps.any((element) => element.jeep.device_id == Jeepney.device_id)){
         var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
         if(isHoverJeep && pressedJeep.jeep.device_id == Jeepney.device_id){
@@ -149,7 +149,7 @@ class _DashboardState extends State<Dashboard> {
         }
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
             geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
-            iconRotate: 90 - angleDegrees,
+            iconRotate: Jeepney.gyroscope[0],
             iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0
         ));
 
@@ -160,7 +160,7 @@ class _DashboardState extends State<Dashboard> {
           iconImage: JeepRoutes[route_choice].image,
           textField: Jeepney.device_id,
           textOpacity: 0,
-          iconRotate: 90 - angleDegrees,
+          iconRotate: Jeepney.gyroscope[0],
         );
         _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
           _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
