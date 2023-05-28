@@ -88,6 +88,7 @@ class _DashboardState extends State<Dashboard> {
           textRotate: Jeepney.gyroscope[0]-90,
           iconRotate: Jeepney.gyroscope[0],
           iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0,
+          textOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0,
       );
       _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
         _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
@@ -156,6 +157,7 @@ class _DashboardState extends State<Dashboard> {
             iconRotate: Jeepney.gyroscope[0],
             iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0,
             textColor: Jeepney.passenger_count < half?"#00FF00":(Jeepney.slots_remaining == 0?"#FF0000":"#0000FF"),
+            textOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0,
             textRotate: Jeepney.gyroscope[0]-90,
         ));
 
@@ -300,12 +302,14 @@ class _DashboardState extends State<Dashboard> {
           if (element.jeep.device_id == pressedJeep.jeep.device_id){
             _mapController.updateSymbol(element.data, const SymbolOptions(
                 iconSize: 0.13,
-                iconOpacity: 1
+                iconOpacity: 1,
+                textOpacity: 1,
             ));
           } else {
             _mapController.updateSymbol(element.data, SymbolOptions(
                 iconSize: 0.1,
-                iconOpacity: element.jeep.is_active?0.4:0
+                iconOpacity: element.jeep.is_active?0.4:0,
+                textOpacity: element.jeep.is_active?0.4:0,
             ));
           }
         }
@@ -313,7 +317,8 @@ class _DashboardState extends State<Dashboard> {
         for (var element in _jeeps) {
           _mapController.updateSymbol(element.data, SymbolOptions(
               iconSize: 0.1,
-              iconOpacity: element.jeep.is_active?1:0
+              iconOpacity: element.jeep.is_active?1:0,
+              textOpacity: element.jeep.is_active?1:0,
           ));
         }
       }
@@ -1734,7 +1739,7 @@ class _DashboardState extends State<Dashboard> {
                                                         children: [
                                                           Container(
                                                             padding: EdgeInsets.all(Constants.defaultPadding),
-                                                            child: Column(
+                                                            child: const Column(
                                                                   mainAxisAlignment: MainAxisAlignment.center,
                                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                                   children: [
@@ -1745,7 +1750,7 @@ class _DashboardState extends State<Dashboard> {
                                                                       overflow: TextOverflow.ellipsis,
                                                                     ),
                                                                     Text(
-                                                                      "press the menu icon at the top left part of the screen!",
+                                                                      "press the menu icon at the top left\npart of the screen!",
                                                                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70),
                                                                       maxLines: 2,
                                                                       overflow: TextOverflow.ellipsis,
