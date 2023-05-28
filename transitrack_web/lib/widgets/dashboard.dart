@@ -77,14 +77,17 @@ class _DashboardState extends State<Dashboard> {
     for (var Jeepney in Jeepneys) {
       // double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
       // double angleDegrees = angleRadians * (180 / pi);
+      int half = (Jeepney.slots_remaining+Jeepney.passenger_count)~/2;
       final jeepEntity = SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconSize: 0.1,
           iconImage: JeepRoutes[route_choice].image,
-          textField: Jeepney.device_id,
-          textOpacity: 0,
+          textSize: 20,
+          textField: "■",
+          textColor: Jeepney.passenger_count < half?"#00FF00":(Jeepney.slots_remaining == 0?"#FF0000":"#0000FF"),
+          textRotate: Jeepney.gyroscope[0]-90,
           iconRotate: Jeepney.gyroscope[0],
-          iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0
+          iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0,
       );
       _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
         _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
@@ -147,20 +150,24 @@ class _DashboardState extends State<Dashboard> {
             isHoverJeep = false;
           }
         }
+        int half = (Jeepney.slots_remaining+Jeepney.passenger_count)~/2;
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
             geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
             iconRotate: Jeepney.gyroscope[0],
-            iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0
+            iconOpacity: Jeepney.is_active?(isHoverJeep?(pressedJeep.jeep==Jeepney?1:0.4):1):0,
+            textColor: Jeepney.passenger_count < half?"#00FF00":(Jeepney.slots_remaining == 0?"#FF0000":"#0000FF"),
+            textRotate: Jeepney.gyroscope[0]-90,
         ));
 
       } else {
+        int half = (Jeepney.slots_remaining+Jeepney.passenger_count)~/2;
         final jeepEntity = SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconSize: 0.1,
           iconImage: JeepRoutes[route_choice].image,
-          textField: Jeepney.device_id,
-          textOpacity: 0,
           iconRotate: Jeepney.gyroscope[0],
+          textColor: Jeepney.passenger_count < half?"#00FF00":(Jeepney.slots_remaining == 0?"#FF0000":"#0000FF"),
+          textRotate: Jeepney.gyroscope[0]-90,
         );
         _mapController.addSymbol(jeepEntity).then((jeepSymbol) {
           _jeeps.add(JeepEntity(jeep: Jeepney, data: jeepSymbol));
@@ -1771,6 +1778,11 @@ class _DashboardState extends State<Dashboard> {
                                               var data = snapshot.data!;
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                               double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                              double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                              String passengers = "passengers";
+                                              if(passenger_count == 1){
+                                                passengers = "passenger";
+                                              }
                                               return Container(
                                                 padding: EdgeInsets.all(Constants.defaultPadding),
                                                 child: Row(
@@ -1787,16 +1799,24 @@ class _DashboardState extends State<Dashboard> {
                                                                   child: Row(
                                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                     children: [
-                                                                      Column(
-                                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                                        children: [
-                                                                          Text(
-                                                                            JeepRoutes[route_choice].name,
-                                                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                                                                            maxLines: 1,
-                                                                            overflow: TextOverflow.ellipsis,
-                                                                          ),
-                                                                        ],
+                                                                      RichText(
+                                                                        textAlign: TextAlign.left,
+                                                                        text: TextSpan(
+                                                                          children: [
+                                                                            TextSpan(
+                                                                              text: JeepRoutes[route_choice].name,
+                                                                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white),
+                                                                            ),
+                                                                            TextSpan(
+                                                                              text: "\n$passenger_count total $passengers",
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white54,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                fontSize: 14,
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
                                                                       ),
                                                                       RichText(
                                                                         textAlign: TextAlign.right,

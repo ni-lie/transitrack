@@ -102,7 +102,7 @@ class JeepInfoCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("${data.passenger_count} passengers (${data.slots_remaining} $slots left)", maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("${data.passenger_count} $passengers (${data.slots_remaining} $slots left)", maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("${snapshot.data}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )
