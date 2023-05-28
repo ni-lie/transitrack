@@ -71,6 +71,17 @@ class JeepInfoCardDetailed extends StatelessWidget {
               ),
             );
           }
+          String slots = "slots";
+          if(data.slots_remaining == 1){
+            slots = "slot";
+          }
+
+          String passengers = "passengers";
+          if(data.passenger_count == 1){
+            slots = "passenger";
+          }
+
+
           return Container(
             padding: const EdgeInsets.all(Constants.defaultPadding),
             margin: const EdgeInsets.only(top: Constants.defaultPadding),
@@ -94,13 +105,13 @@ class JeepInfoCardDetailed extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        isHeatMap?data.embark?const Text("Passenger Picked Up", maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?const Text("Passenger Dropped Off", maxLines: 1, overflow: TextOverflow.ellipsis):const SizedBox()):Text("${data.passenger_count} passengers (${data.slots_remaining} slots left)", maxLines: 1, overflow: TextOverflow.ellipsis),
+                        isHeatMap?data.embark?const Text("Passenger Picked Up", maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?const Text("Passenger Dropped Off", maxLines: 1, overflow: TextOverflow.ellipsis):const SizedBox()):Text("${data.passenger_count} $passengers (${data.slots_remaining} $slots left)", maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 5),
-                        Text("${snapshot.data}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("${snapshot.data}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 2, overflow: TextOverflow.ellipsis),
                         Text("Device ID: ${data.device_id}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         isHeatMap?
-                        Text("Passenger count: ${data.passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):data.embark?Text("Passenger Picked Up", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark? Text("Passenger Dropped Off", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):const SizedBox()),
-                        Text("Slots remaining: ${data.slots_remaining} slots", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Passenger count: ${data.passenger_count} $passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):data.embark?Text("Passenger Picked Up", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark? Text("Passenger Dropped Off", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):const SizedBox()),
+                        Text("Slots remaining: ${data.slots_remaining} $slots", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Air Quality: ${data.air_qual.toStringAsFixed(2)} ppm", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Ambient Temperature: ${data.temp.toStringAsFixed(2)} °C", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Speed: ${data.speed.toStringAsFixed(2)} m/s", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),

@@ -2019,6 +2019,11 @@ class _DashboardState extends State<Dashboard> {
                                             var data = snapshot.data!;
                                             double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                             double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                            double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                            String passengers = "passengers";
+                                            if(passenger_count == 1){
+                                              passengers = "passenger";
+                                            }
                                             return Container(
                                               decoration: const BoxDecoration(
                                                 color: Constants.secondaryColor,
@@ -2047,7 +2052,13 @@ class _DashboardState extends State<Dashboard> {
                                                           ),
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
-                                                          const SizedBox(height: Constants.defaultPadding),
+                                                          SizedBox(height: Constants.defaultPadding, child: Text(
+                                                            "$passenger_count total $passengers",
+                                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                            textAlign: TextAlign.right,
+                                                          )),
                                                           const Divider(),
                                                           isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
                                                           _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
