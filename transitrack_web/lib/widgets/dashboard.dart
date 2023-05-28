@@ -1783,7 +1783,21 @@ class _DashboardState extends State<Dashboard> {
                                               var data = snapshot.data!;
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                               double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                              double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
+                                              int passenger_count = data.fold(0, (int previousValue, JeepData jeepney) {
+                                                if(jeepney.is_active){
+                                                  return previousValue + jeepney.passenger_count;
+                                                }
+                                                else {
+                                                  return previousValue;
+                                                }
+                                              });
+                                              int capacity_count = data.fold(0, (int previousValue, JeepData jeepney) {
+                                                if(jeepney.is_active){
+                                                  return previousValue + jeepney.passenger_count + jeepney.slots_remaining;
+                                                } else {
+                                                  return previousValue;
+                                                }
+                                              });
                                               String passengers = "passengers";
                                               if(passenger_count == 1){
                                                 passengers = "passenger";
@@ -1814,6 +1828,22 @@ class _DashboardState extends State<Dashboard> {
                                                                             ),
                                                                             TextSpan(
                                                                               text: "\n$passenger_count total $passengers",
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white54,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                fontSize: 14,
+                                                                              ),
+                                                                            ),
+                                                                            TextSpan(
+                                                                              text: "\n$capacity_count total capacity",
+                                                                              style: Theme.of(context).textTheme.headline4?.copyWith(
+                                                                                color: Colors.white54,
+                                                                                fontWeight: FontWeight.w600,
+                                                                                fontSize: 14,
+                                                                              ),
+                                                                            ),
+                                                                            TextSpan(
+                                                                              text: "\n${((passenger_count/capacity_count) * 100).toStringAsFixed(0)}% capacity utilization",
                                                                               style: Theme.of(context).textTheme.headline4?.copyWith(
                                                                                 color: Colors.white54,
                                                                                 fontWeight: FontWeight.w600,
@@ -2044,11 +2074,21 @@ class _DashboardState extends State<Dashboard> {
                                             var data = snapshot.data!;
                                             double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                             double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                            double passenger_count = data.fold(0, (int previousValue, JeepData jeepney) => previousValue + jeepney.passenger_count).toDouble();
-                                            String passengers = "passengers";
-                                            if(passenger_count == 1){
-                                              passengers = "passenger";
-                                            }
+                                            int passenger_count = data.fold(0, (int previousValue, JeepData jeepney) {
+                                              if(jeepney.is_active){
+                                                return previousValue + jeepney.passenger_count;
+                                              }
+                                              else {
+                                                return previousValue;
+                                              }
+                                            });
+                                            int capacity_count = data.fold(0, (int previousValue, JeepData jeepney) {
+                                              if(jeepney.is_active){
+                                                return previousValue + jeepney.passenger_count + jeepney.slots_remaining;
+                                              } else {
+                                                return previousValue;
+                                              }
+                                            });
                                             return Container(
                                               decoration: const BoxDecoration(
                                                 color: Constants.secondaryColor,
@@ -2078,7 +2118,21 @@ class _DashboardState extends State<Dashboard> {
                                                           const SizedBox(height: Constants.defaultPadding),
                                                           route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
                                                           SizedBox(height: Constants.defaultPadding, child: Text(
-                                                            "$passenger_count total $passengers",
+                                                            "${passenger_count} total passengers",
+                                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                            textAlign: TextAlign.right,
+                                                          )),
+                                                          SizedBox(height: Constants.defaultPadding, child: Text(
+                                                            "${capacity_count} total capacity",
+                                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                            textAlign: TextAlign.right,
+                                                          )),
+                                                          SizedBox(height: Constants.defaultPadding, child: Text(
+                                                            "${((passenger_count/capacity_count) * 100).toStringAsFixed(0)}% capacity utilization",
                                                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                                                             maxLines: 1,
                                                             overflow: TextOverflow.ellipsis,

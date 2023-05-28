@@ -81,7 +81,6 @@ class JeepInfoCardDetailed extends StatelessWidget {
             slots = "passenger";
           }
 
-
           return Container(
             padding: const EdgeInsets.all(Constants.defaultPadding),
             margin: const EdgeInsets.only(top: Constants.defaultPadding),
