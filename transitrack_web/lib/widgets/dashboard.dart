@@ -1859,7 +1859,7 @@ class _DashboardState extends State<Dashboard> {
                                               double operating = data.where((jeep) => jeep.is_active).length.toDouble();
                                               double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
                                               return Container(
-                                                padding: EdgeInsets.all(Constants.defaultPadding),
+                                                padding: const EdgeInsets.all(Constants.defaultPadding),
                                                 child: Row(
                                                   children: [
                                                     Expanded(
@@ -1930,8 +1930,8 @@ class _DashboardState extends State<Dashboard> {
                                                             ),
                                                             const SizedBox(height: Constants.defaultPadding),
                                                             const Divider(),
-                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
-                                                            _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
+                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):const SelectJeepInfoCard(isHeatMap: false),
+                                                            _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):const SelectJeepInfoCard(isHeatMap: true)):SizedBox()
                                                           ],
                                                         ),
                                                       ),

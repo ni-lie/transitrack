@@ -26,21 +26,19 @@ class JeepInfoCardDetailed extends StatelessWidget {
         builder: (context, snapshot) {
           if(snapshot.data == null){
             return Container(
-              padding: EdgeInsets.all(Constants.defaultPadding),
-              margin: EdgeInsets.only(top: Constants.defaultPadding),
+              padding: const EdgeInsets.all(Constants.defaultPadding),
+              margin: const EdgeInsets.only(top: Constants.defaultPadding),
               decoration: BoxDecoration(
                 border: Border.all(
                   width: 2,
                   color: Colors.grey.withOpacity(0.15),
                 ),
-                borderRadius: BorderRadius.all(Radius.circular(Constants.defaultPadding)),
+                borderRadius: const BorderRadius.all(Radius.circular(Constants.defaultPadding)),
               ),
               child: Row(
                 children: [
-                  Container(
-                    child: ShimmerWidget(height: 40, width: 40, radius: Constants.defaultPadding),
-                  ),
-                  SizedBox(width: Constants.defaultPadding),
+                  ShimmerWidget(height: 40, width: 40, radius: Constants.defaultPadding),
+                  const SizedBox(width: Constants.defaultPadding),
                   Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,18 +48,18 @@ class JeepInfoCardDetailed extends StatelessWidget {
                               Expanded(
                                   flex: 9,
                                   child: SizedBox(child: ShimmerWidget(height: 16))),
-                              Expanded(
+                              const Expanded(
                                   flex: 1,
                                   child: SizedBox())
                             ],
                           ),
-                          SizedBox(height: Constants.defaultPadding/2),
+                          const SizedBox(height: Constants.defaultPadding/2),
                           Row(
                             children: [
                               Expanded(
                                   flex: 2,
                                   child: SizedBox(child: ShimmerWidget(height: 12))),
-                              Expanded(
+                              const Expanded(
                                   flex: 3,
                                   child: SizedBox())
                             ],
@@ -96,15 +94,16 @@ class JeepInfoCardDetailed extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("${snapshot.data}", maxLines: 2, overflow: TextOverflow.ellipsis),
+                        isHeatMap?data.embark?const Text("Passenger Picked Up", maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?const Text("Passenger Dropped Off", maxLines: 1, overflow: TextOverflow.ellipsis):const SizedBox()):Text("${data.passenger_count} passengers (${data.slots_remaining} slots left)", maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 5),
+                        Text("${snapshot.data}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Device ID: ${data.device_id}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text("Passenger count: ${data.passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        isHeatMap?
+                        Text("Passenger count: ${data.passenger_count} passengers", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):data.embark?Text("Passenger Picked Up", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark? Text("Passenger Dropped Off", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):const SizedBox()),
                         Text("Slots remaining: ${data.slots_remaining} slots", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Air Quality: ${data.air_qual.toStringAsFixed(2)} ppm", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text("Ambient Temperature: ${data.temp} °C", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text("Speed: ${data.speed} m/s", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        data.embark?Text("Passenger Picked Up", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):(data.disembark?Text("Passenger Dropped Off", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis):SizedBox()),
+                        Text("Ambient Temperature: ${data.temp.toStringAsFixed(2)} °C", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Speed: ${data.speed.toStringAsFixed(2)} m/s", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Timestamp: ${data.timestamp.toDate()}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )
