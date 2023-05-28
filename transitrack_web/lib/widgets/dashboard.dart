@@ -16,6 +16,7 @@ import '../components/firestore/download_historical_jeep_csv.dart';
 import '../components/header.dart';
 import '../components/jeep_info_card.dart';
 import '../components/jeep_info_card_detailed.dart';
+import '../components/legends.dart';
 import '../components/route_info_chart.dart';
 import '../components/route_info_panel_shimmer_v2.dart';
 import '../components/select_jeep_info.dart';
@@ -178,7 +179,7 @@ class _DashboardState extends State<Dashboard> {
 
     }
   }
-
+  
   void _updateRoutes(){
     for (var element in _jeeps) {_mapController.removeSymbol(element.data);}
     _jeeps.clear();
@@ -604,10 +605,26 @@ class _DashboardState extends State<Dashboard> {
                                 children: [
                                   Icon(Icons.data_usage_outlined, color: _showHeatMapTab?Colors.lightBlue:Colors.white70),
                                   const SizedBox(width: Constants.defaultPadding),
-                                  Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70)),
+                                  Expanded(child: Text('Heatmaps', style: TextStyle(color: _showHeatMapTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis)),
                                   const Spacer(),
+
                                   if(_showHeatMapTab)
-                                    DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+                                    Row(
+                                      children: [
+                                        GestureDetector(
+                                            onTap: (){
+                                              setState(
+                                                      (){
+                                                    _selectSettingsHeatMap = !_selectSettingsHeatMap;
+                                                  }
+                                              );
+                                            },
+                                            child: Icon(Icons.settings, size: 20, color: _selectSettingsHeatMap?Colors.lightBlue:Colors.white38)),
+                                        SizedBox(width: Constants.defaultPadding),
+                                        DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
+
+                                      ],
+                                    ),
                                 ],
                               ),
                               if(_showHeatMapTab)
@@ -615,6 +632,149 @@ class _DashboardState extends State<Dashboard> {
                                   children: [
                                     const SizedBox(height: Constants.defaultPadding/2),
                                     const Divider(),
+
+                                    if(_selectSettingsHeatMap)
+                                      Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Container(
+                                                    padding: const EdgeInsets.only(top: Constants.defaultPadding/2),
+                                                    child: const Text("Heatmap Radius", maxLines: 1, overflow: TextOverflow.ellipsis)
+                                                ),
+                                              ),
+
+                                              Row(
+                                                children: [
+                                                  Text("$_radiusHeatMap"),
+                                                  const SizedBox(width: Constants.defaultPadding),
+                                                  Column(
+                                                      children: [
+                                                        GestureDetector(
+                                                            onTap: (){
+                                                              setState(
+                                                                      (){
+                                                                    _radiusHeatMap += 2;
+                                                                  }
+                                                              );
+
+                                                              if(showPickUps){
+                                                                for (var element in _heatmapRideCircles) {
+                                                                  _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                }
+                                                              }
+
+                                                              if(showDropOffs){
+                                                                for (var element in _heatmapDropCircles) {
+                                                                  _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                }
+                                                              }
+
+                                                            },
+                                                            child: const Icon(Icons.arrow_drop_up, color: Colors.lightBlue)),
+                                                        GestureDetector(
+                                                            onTap: (){
+                                                              if(_radiusHeatMap-2 > 0)
+                                                              {
+                                                                setState(
+                                                                        (){
+                                                                      _radiusHeatMap -= 2;
+                                                                    }
+                                                                );
+                                                                if(showPickUps){
+                                                                  for (var element in _heatmapRideCircles) {
+                                                                    _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                  }
+                                                                }
+
+                                                                if(showDropOffs){
+                                                                  for (var element in _heatmapDropCircles) {
+                                                                    _mapController.updateCircle(element.data, CircleOptions(circleRadius: _radiusHeatMap));
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            child: const Icon(Icons.arrow_drop_down, color: Colors.lightBlue))
+                                                      ]
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Container(
+                                                    padding: const EdgeInsets.symmetric(vertical: Constants.defaultPadding/2),
+                                                    child: const Text("Heatmap Intensity", maxLines: 1, overflow: TextOverflow.ellipsis)
+                                                ),
+                                              ),
+
+                                              Row(
+                                                children: [
+                                                  Text("${_opacityHeatmap.toStringAsFixed(2)}"),
+                                                  const SizedBox(width: Constants.defaultPadding),
+                                                  Column(
+                                                      children: [
+                                                        GestureDetector(
+                                                            onTap: (){
+                                                              if(_opacityHeatmap+0.02 < 1)
+                                                              {
+                                                                setState(
+                                                                        (){
+                                                                      _opacityHeatmap += 0.02;
+                                                                    }
+                                                                );
+
+                                                                if(showPickUps){
+                                                                  for (var element in _heatmapRideCircles) {
+                                                                    _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                  }
+                                                                }
+
+                                                                if(showDropOffs){
+                                                                  for (var element in _heatmapDropCircles) {
+                                                                    _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            child: const Icon(Icons.arrow_drop_up, color: Colors.lightBlue)),
+                                                        GestureDetector(
+                                                            onTap: (){
+                                                              if(_opacityHeatmap-0.02 > 0)
+                                                              {
+                                                                setState(
+                                                                        (){
+                                                                      _opacityHeatmap -= 0.02;
+                                                                    }
+                                                                );
+                                                                if(showPickUps){
+                                                                  for (var element in _heatmapRideCircles) {
+                                                                    _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                  }
+                                                                }
+
+                                                                if(showDropOffs){
+                                                                  for (var element in _heatmapDropCircles) {
+                                                                    _mapController.updateCircle(element.data, CircleOptions(circleOpacity: _opacityHeatmap));
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            child: const Icon(Icons.arrow_drop_down, color: Colors.lightBlue))
+                                                      ]
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          const Divider(),
+                                        ],
+                                      ),
                                     const SizedBox(height: Constants.defaultPadding/2),
                                     Row(
                                       children:
@@ -1496,13 +1656,15 @@ class _DashboardState extends State<Dashboard> {
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Expanded(
-                                                child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.start,
-                                                    children: [
-                                                      Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
-                                                      const SizedBox(width: Constants.defaultPadding),
-                                                      Text('Historical Data', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)
-                                                  ]
+                                                child: Container(
+                                                  child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                      children: [
+                                                        Icon(Icons.directions_bus, color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70),
+                                                        const SizedBox(width: Constants.defaultPadding),
+                                                        Text('Historical Data', style: TextStyle(color: _showJeepHistoryTab?Colors.lightBlue:Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis,)
+                                                    ]
+                                                  ),
                                                 ),
                                               ),
 
@@ -1708,10 +1870,10 @@ class _DashboardState extends State<Dashboard> {
                                       Expanded(child: MapboxMap(
                                             accessToken: Keys.MapBoxKey,
                                             styleString: Keys.MapBoxNight,
-                                            zoomGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? true),
-                                            scrollGesturesEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? true),
+                                            zoomGesturesEnabled: true,
+                                            scrollGesturesEnabled: true,
                                             doubleClickZoomEnabled: false,
-                                            dragEnabled: !(context.read<MenuControllers>().scaffoldKey.currentState?.isDrawerOpen ?? true),
+                                            dragEnabled: true,
                                             minMaxZoomPreference: const MinMaxZoomPreference(12, 19),
                                             rotateGesturesEnabled: false,
                                             tiltGesturesEnabled: false,
@@ -2006,6 +2168,9 @@ class _DashboardState extends State<Dashboard> {
                                           right: Constants.defaultPadding,
                                           child: CircularProgressIndicator()
                                       ),
+                                    
+                                    if(_isLoaded && route_choice != -1)
+                                      const Legends()
                                   ]
                                 ),
                             ),
@@ -2027,180 +2192,194 @@ class _DashboardState extends State<Dashboard> {
                                     },
                                     child: SingleChildScrollView(
                                       physics: const NeverScrollableScrollPhysics(),
-                                      child: Container(
-                                        margin: const EdgeInsets.all(Constants.defaultPadding),
-                                        decoration: const BoxDecoration(
-                                          color: Constants.secondaryColor,
-                                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                                        ),
-                                        child: route_choice==-1?Container(
-                                          padding: const EdgeInsets.all(Constants.defaultPadding),
-                                          decoration: const BoxDecoration(
-                                            color: Constants.secondaryColor,
-                                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                                          ),
-                                          child: const Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Select a route",
-                                                style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              SizedBox(height: Constants.defaultPadding),
-                                              SizedBox(
-                                                height:200,
-                                                child: Center(child: CircleAvatar(
-                                                radius: 90,
-                                                  backgroundColor: Colors.white38,
-                                                  child: CircleAvatar(
-                                                        radius: 70,
-                                                      backgroundColor: Constants.secondaryColor,
-                                                      child: Icon(Icons.touch_app_rounded, color: Colors.white38, size: 50)
-                                                  ),
-                                                )),
-                                              ),
-                                              SizedBox(height: Constants.defaultPadding),
-                                            ],
-                                          ),
-                                        ):(_showJeepHistoryTab
-                                          ?FutureBuilder(
-                                          future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
-                                          builder: (context, snapshot) {
-                                            if (!snapshot.hasData || snapshot.hasError) {
-                                              return const ShimmerDesktopRouteInfo();
-                                            }
-                                            var data = snapshot.data!;
-                                            double operating = data.where((jeep) => jeep.is_active).length.toDouble();
-                                            double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                            int passenger_count = data.fold(0, (int previousValue, JeepData jeepney) {
-                                              if(jeepney.is_active){
-                                                return previousValue + jeepney.passenger_count;
-                                              }
-                                              else {
-                                                return previousValue;
-                                              }
-                                            });
-                                            int capacity_count = data.fold(0, (int previousValue, JeepData jeepney) {
-                                              if(jeepney.is_active){
-                                                return previousValue + jeepney.passenger_count + jeepney.slots_remaining;
-                                              } else {
-                                                return previousValue;
-                                              }
-                                            });
-                                            return Container(
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                              margin: const EdgeInsets.all(Constants.defaultPadding),
                                               decoration: const BoxDecoration(
                                                 color: Constants.secondaryColor,
                                                 borderRadius: BorderRadius.all(Radius.circular(10)),
                                               ),
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: SingleChildScrollView(
-                                                      physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
-                                                      padding: const EdgeInsets.all(Constants.defaultPadding),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Row(
-                                                            children: [
-                                                              Expanded(
-                                                                child: Text(
-                                                                  JeepRoutes[route_choice].name,
-                                                                  style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                                                                  maxLines: 1,
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          const SizedBox(height: Constants.defaultPadding),
-                                                          route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
-                                                          SizedBox(height: Constants.defaultPadding, child: Text(
-                                                            "${passenger_count} total passengers",
-                                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            textAlign: TextAlign.right,
-                                                          )),
-                                                          SizedBox(height: Constants.defaultPadding, child: Text(
-                                                            "${capacity_count} total capacity",
-                                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            textAlign: TextAlign.right,
-                                                          )),
-                                                          SizedBox(height: Constants.defaultPadding, child: Text(
-                                                            "${((passenger_count/capacity_count) * 100).toStringAsFixed(0)}% capacity utilization",
-                                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            textAlign: TextAlign.right,
-                                                          )),
-                                                          const Divider(),
-                                                          isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
-                                                          _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }
-                                        )
-                                          :StreamBuilder(
-                                            stream: FireStoreDataBase().fetchJeepData(route_choice),
-                                            builder: (context, snapshot) {
-                                              if (!snapshot.hasData || snapshot.hasError) {
-                                                return const ShimmerDesktopRouteInfo();
-                                              }
-                                              var data = snapshot.data!;
-                                              double operating = data.where((jeep) => jeep.is_active).length.toDouble();
-                                              double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
-                                              return Container(
+                                              child: route_choice==-1?Container(
+                                                padding: const EdgeInsets.all(Constants.defaultPadding),
                                                 decoration: const BoxDecoration(
                                                   color: Constants.secondaryColor,
                                                   borderRadius: BorderRadius.all(Radius.circular(10)),
                                                 ),
-                                                child: Row(
+                                                child: const Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Expanded(
-                                                      child: SingleChildScrollView(
-                                                        physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
-                                                        padding: const EdgeInsets.all(Constants.defaultPadding),
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            Row(
-                                                              children: [
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    JeepRoutes[route_choice].name,
-                                                                    style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                                                                    maxLines: 1,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            const SizedBox(height: Constants.defaultPadding),
-                                                            route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
-                                                            const SizedBox(height: Constants.defaultPadding),
-                                                            const Divider(),
-                                                            isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
-                                                            _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
-                                                          ],
-                                                        ),
-                                                      ),
+                                                    Text(
+                                                      "Select a route",
+                                                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
                                                     ),
+                                                    SizedBox(height: Constants.defaultPadding),
+                                                    SizedBox(
+                                                      height:200,
+                                                      child: Center(child: CircleAvatar(
+                                                        radius: 90,
+                                                        backgroundColor: Colors.white38,
+                                                        child: CircleAvatar(
+                                                            radius: 70,
+                                                            backgroundColor: Constants.secondaryColor,
+                                                            child: Icon(Icons.touch_app_rounded, color: Colors.white38, size: 50)
+                                                        ),
+                                                      )),
+                                                    ),
+                                                    SizedBox(height: Constants.defaultPadding),
                                                   ],
                                                 ),
-                                              );
-                                            }
-                                        )
-                                        )
+                                              ):(_showJeepHistoryTab
+                                                  ?FutureBuilder(
+                                                  future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                                  builder: (context, snapshot) {
+                                                    if (!snapshot.hasData || snapshot.hasError) {
+                                                      return const ShimmerDesktopRouteInfo();
+                                                    }
+                                                    var data = snapshot.data!;
+                                                    double operating = data.where((jeep) => jeep.is_active).length.toDouble();
+                                                    double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                                    int passenger_count = data.fold(0, (int previousValue, JeepData jeepney) {
+                                                      if(jeepney.is_active){
+                                                        return previousValue + jeepney.passenger_count;
+                                                      }
+                                                      else {
+                                                        return previousValue;
+                                                      }
+                                                    });
+                                                    int capacity_count = data.fold(0, (int previousValue, JeepData jeepney) {
+                                                      if(jeepney.is_active){
+                                                        return previousValue + jeepney.passenger_count + jeepney.slots_remaining;
+                                                      } else {
+                                                        return previousValue;
+                                                      }
+                                                    });
+                                                    return Stack(
+                                                      children: [
+                                                        Container(
+                                                          decoration: const BoxDecoration(
+                                                            color: Constants.secondaryColor,
+                                                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                                                          ),
+                                                          child: Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: SingleChildScrollView(
+                                                                  physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
+                                                                  padding: const EdgeInsets.all(Constants.defaultPadding),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Row(
+                                                                        children: [
+                                                                          Expanded(
+                                                                            child: Text(
+                                                                              JeepRoutes[route_choice].name,
+                                                                              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                                              maxLines: 1,
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(height: Constants.defaultPadding),
+                                                                      route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
+                                                                      SizedBox(height: Constants.defaultPadding, child: Text(
+                                                                        "${passenger_count} total passengers",
+                                                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                                                        maxLines: 1,
+                                                                        overflow: TextOverflow.ellipsis,
+                                                                        textAlign: TextAlign.right,
+                                                                      )),
+                                                                      SizedBox(height: Constants.defaultPadding, child: Text(
+                                                                        "${capacity_count} total capacity",
+                                                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                                                        maxLines: 1,
+                                                                        overflow: TextOverflow.ellipsis,
+                                                                        textAlign: TextAlign.right,
+                                                                      )),
+                                                                      SizedBox(height: Constants.defaultPadding, child: Text(
+                                                                        "${((passenger_count/capacity_count) * 100).toStringAsFixed(0)}% capacity utilization",
+                                                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                                                        maxLines: 1,
+                                                                        overflow: TextOverflow.ellipsis,
+                                                                        textAlign: TextAlign.right,
+                                                                      )),
+                                                                      const Divider(),
+                                                                      isHoverJeep?JeepInfoCardDetailed(route_choice: route_choice, data: pressedJeep.jeep, isHeatMap: false):SelectJeepInfoCard(isHeatMap: false),
+                                                                      _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        const Legends()
+                                                      ],
+                                                    );
+                                                  }
+                                              )
+                                                  :StreamBuilder(
+                                                  stream: FireStoreDataBase().fetchJeepData(route_choice),
+                                                  builder: (context, snapshot) {
+                                                    if (!snapshot.hasData || snapshot.hasError) {
+                                                      return const ShimmerDesktopRouteInfo();
+                                                    }
+                                                    var data = snapshot.data!;
+                                                    double operating = data.where((jeep) => jeep.is_active).length.toDouble();
+                                                    double not_operating = data.where((jeep) => !jeep.is_active).length.toDouble();
+                                                    return Stack(
+                                                      children: [
+                                                        Container(
+                                                          decoration: const BoxDecoration(
+                                                            color: Constants.secondaryColor,
+                                                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                                                          ),
+                                                          child: Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: SingleChildScrollView(
+                                                                  physics: isMouseHoveringRouteInfo?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
+                                                                  padding: const EdgeInsets.all(Constants.defaultPadding),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Row(
+                                                                        children: [
+                                                                          Expanded(
+                                                                            child: Text(
+                                                                              JeepRoutes[route_choice].name,
+                                                                              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                                                                              maxLines: 1,
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                      const SizedBox(height: Constants.defaultPadding),
+                                                                      route_info_chart(route_choice: route_choice, operating: operating, not_operating: not_operating),
+                                                                      const SizedBox(height: Constants.defaultPadding),
+                                                                      const Divider(),
+                                                                      isHoverJeep?JeepInfoCard(route_choice: route_choice, data: pressedJeep.jeep):SelectJeepInfoCard(isHeatMap: false),
+                                                                      _showHeatMapTab?(_tappedCircle?JeepInfoCardDetailed(route_choice: route_choice, data: pressedCircle.heatmap, isHeatMap: true):SelectJeepInfoCard(isHeatMap: true)):SizedBox()
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        const Legends()
+                                                      ],
+                                                    );
+                                                  }
+                                              )
+                                              )
+                                          ),
+                                        ],
                                       )
                                     ),
                                   ),
@@ -2225,7 +2404,6 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
-
 
 
 
