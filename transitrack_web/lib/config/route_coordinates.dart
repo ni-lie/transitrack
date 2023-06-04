@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:transitrack_web/style/constants.dart';
 
+import '../models/member_model.dart';
+
 
 class Routes {
 
@@ -276,38 +278,44 @@ class JeepRoute {
   String name;
   Color color;
   String image;
-  String selectedImage;
   List<int> OpHours;
 
   JeepRoute({
     required this.name,
     required this.color,
     required this.image,
-    required this.selectedImage,
     required this.OpHours
   });
 }
 
 List<JeepRoute> JeepRoutes = [
-  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'assets/jeep_icons_top/ikot.png', selectedImage: 'jeep_icons_top/selected/ikot.png', OpHours: [8, 17]),
-  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'assets/jeep_icons_top/toki.png', selectedImage: 'jeep_icons_top/selected/toki.png', OpHours: [17, 21]),
-  JeepRoute(name: 'Katipunan', color: Constants.katipColor, image: 'assets/jeep_icons_top/katip.png', selectedImage: 'jeep_icons_top/selected/katip.png', OpHours: [8, 17]),
-  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'assets/jeep_icons_top/philcoa.png', selectedImage: 'jeep_icons_top/selected/philcoa.png', OpHours: [8, 17]),
-  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'assets/jeep_icons_top/sm.png', selectedImage: 'jeep_icons_top/selected/sm.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Ikot', color: Constants.ikotColor, image: 'assets/ikot_top.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Toki', color: Constants.tokiColor, image: 'assets/toki_top.png', OpHours: [17, 21]),
+  JeepRoute(name: 'Katipunan', color: Constants.katipColor, image: 'assets/katip_top.png', OpHours: [8, 17]),
+  JeepRoute(name: 'Philcoa', color: Constants.philcoaColor, image: 'assets/philcoa_top.png', OpHours: [8, 17]),
+  JeepRoute(name: 'SM North Edsa', color: Constants.smColor, image: 'assets/sm_top.png', OpHours: [8, 17]),
 ];
 
 List<String> JeepFront = [
-  'assets/jeep_icons_front/ikot.png',
-  'assets/jeep_icons_front/toki.png',
-  'assets/jeep_icons_front/katip.png',
-  'assets/jeep_icons_front/philcoa.png',
-  'assets/jeep_icons_front/sm.png',
+  'assets/ikot_front.png',
+  'assets/toki_front.png',
+  'assets/katip_front.png',
+  'assets/philcoa_front.png',
+  'assets/sm_front.png',
 ];
 
 List<String> JeepSide = [
-  'assets/jeep_icons_side/ikot.png',
-  'assets/jeep_icons_side/toki.png',
-  'assets/jeep_icons_side/katip.png',
-  'assets/jeep_icons_side/philcoa.png',
-  'assets/jeep_icons_side/sm.png',
+  'assets/ikot_side.png',
+  'assets/toki_side.png',
+  'assets/katip_side.png',
+  'assets/philcoa_side.png',
+  'assets/sm_side.png',
+];
+
+List<Member> Members = [
+  Member(fullname: "Raynor Chavez", description: "In this IoT project, I was responsible for developing the hardware prototype, which encompassed orchestrating sensor integration and designing device schematics. Additionally, I wrote IoT code to consolidate and manage sensor data directly on the device.", github: "github.com/RaynorChavez", email: "raynorkirksonchavez@gmail.com", linkedin: "linkedin.com/in/raynorchavez", img: 'assets/rk.jpg'),
+  Member(fullname: "Denver Bugaoisan", description: "I created the mobile responsive website for this project as well as the assets. I also made sure that data from the sensors gets to our cloud database and it is properly received and processed by the website.", github: "github.com/zedecpacaldo", email: "zedec.pacaldo@gmail.com", linkedin: "linkedin.com/in/zedecpacaldo", img: 'assets/zedec.png'),
+  Member(fullname: "Zedec Inalvez Pacaldo", description: "I created the mobile responsive website for this project as well as the assets. I also made sure that data from the sensors gets to our cloud database and it is properly received and processed by the website.", github: "github.com/zedecpacaldo", email: "zedec.pacaldo@gmail.com", linkedin: "linkedin.com/in/zedecpacaldo", img: 'assets/zedec.png'),
+  Member(fullname: "Cjay Coronel", description: "I created the mobile responsive website for this project as well as the assets. I also made sure that data from the sensors gets to our cloud database and it is properly received and processed by the website.", github: "github.com/zedecpacaldo", email: "zedec.pacaldo@gmail.com", linkedin: "linkedin.com/in/zedecpacaldo", img: 'assets/zedec.png'),
+  Member(fullname: "Gorge Vann Vedasto", description: "I created the mobile responsive website for this project as well as the assets. I also made sure that data from the sensors gets to our cloud database and it is properly received and processed by the website.", github: "github.com/zedecpacaldo", email: "zedec.pacaldo@gmail.com", linkedin: "linkedin.com/in/zedecpacaldo", img: 'assets/zedec.png'),
 ];

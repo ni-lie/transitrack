@@ -16,6 +16,7 @@ class JeepData{
   double temp;
   double air_qual;
   int slots_remaining;
+  double bearing;
 
   JeepData({
     required this.device_id,
@@ -31,7 +32,8 @@ class JeepData{
     required this.gyroscope,
     required this.temp,
     required this.air_qual,
-    required this.slots_remaining
+    required this.slots_remaining,
+    required this.bearing
   });
 
   factory JeepData.fromSnapshot(QueryDocumentSnapshot<Object?> snapshot) {
@@ -51,6 +53,7 @@ class JeepData{
     double temp = data['temp'] as double;
     double air_qual = data['air_qual'] as double;
     int slots_remaining = data['slots_remaining'];
+    double bearing = data['bearing'] as double;
 
     return JeepData(
       device_id: device_id,
@@ -66,7 +69,8 @@ class JeepData{
       gyroscope: gyroscope,
       temp: temp,
       air_qual: air_qual,
-      slots_remaining: slots_remaining
+      slots_remaining: slots_remaining,
+      bearing: bearing
     );
   }
 }
@@ -77,6 +81,6 @@ class JeepEntity{
 
   JeepEntity({
    required this.jeep,
-   required this.data
+   required this.data,
   });
 }
