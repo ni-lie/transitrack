@@ -75,11 +75,6 @@ class JeepInfoCard extends StatelessWidget {
             slots = "slot";
           }
 
-          String passengers = "passengers";
-
-          if(data.passenger_count == 1){
-            passengers = "passenger";
-          }
           return Container(
             padding: const EdgeInsets.all(Constants.defaultPadding),
             margin: const EdgeInsets.only(top: Constants.defaultPadding),
@@ -102,7 +97,7 @@ class JeepInfoCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("${data.passenger_count} $passengers (${data.slots_remaining} $slots left)", maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(data.slots_remaining <= 0?("Full"):(data.passenger_count==0?"Empty":"${data.slots_remaining} $slots left"), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("${snapshot.data}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )

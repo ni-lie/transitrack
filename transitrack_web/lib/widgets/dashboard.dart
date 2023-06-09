@@ -140,8 +140,7 @@ class _DashboardState extends State<Dashboard> {
           pressedJeep.jeep = Jeepney;
         }
       }
-      // double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
-      // double angleDegrees = angleRadians * (180 / pi);
+
       if(_jeeps.any((element) => element.jeep.device_id == Jeepney.device_id)){
         var symbolToUpdate = _jeeps.firstWhere((symbol) => symbol.jeep.device_id == Jeepney.device_id);
         if(isHoverJeep && pressedJeep.jeep.device_id == Jeepney.device_id){

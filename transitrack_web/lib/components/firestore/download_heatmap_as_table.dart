@@ -10,7 +10,6 @@ import 'package:universal_html/html.dart' as html;
 
 import '../../address_finder.dart';
 import '../../config/route_coordinates.dart';
-import '../../models/heatmap_model.dart';
 
 
 Future<void> downloadHeatMapCollectionAsCSV(int routeId, Timestamp start, Timestamp end) async {
