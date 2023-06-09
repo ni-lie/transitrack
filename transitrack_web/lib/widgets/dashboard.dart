@@ -205,7 +205,7 @@ class _DashboardState extends State<Dashboard> {
           _mapController.removeSymbol(element.data);
         }
         _jeeps.clear();
-        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+        List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
         _addSymbols(test);
       } else {
         List<JeepData> test = await FireStoreDataBase().loadJeepsByRouteId(route_choice);
@@ -371,10 +371,24 @@ class _DashboardState extends State<Dashboard> {
       firstDate: DateTime(2023),
       lastDate: DateTime.now(),
     );
+
+
     if (picked != null && picked != _selectedDateStartHeatMap) {
-      setState(() {
-        _selectedDateStartHeatMap = picked;
-      });
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDateStartHeatMap),
+      );
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDateStartHeatMap = DateTime(
+            picked.year,
+            picked.month,
+            picked.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
       _subscribeHeatMap();
     }
     isMouseHoveringRouteInfo = false;
@@ -388,10 +402,24 @@ class _DashboardState extends State<Dashboard> {
       firstDate: DateTime(2023),
       lastDate: DateTime.now(),
     );
+
+
     if (picked != null && picked != _selectedDateEndHeatMap) {
-      setState(() {
-        _selectedDateEndHeatMap = picked;
-      });
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDateEndHeatMap),
+      );
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDateEndHeatMap = DateTime(
+            picked.year,
+            picked.month,
+            picked.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
       _subscribeHeatMap();
     }
     isMouseHoveringRouteInfo = false;
@@ -399,56 +427,20 @@ class _DashboardState extends State<Dashboard> {
 
   DateTime selectedDateTimeAnalysis = DateTime.now();
 
-  Future<void> _selectDateTime(BuildContext context) async {
-    isMouseHoveringRouteInfo = true;
-    final DateTime? pickedDateTime = await showDatePicker(
-      context: context,
-      initialDate: selectedDateTimeAnalysis,
-      firstDate: DateTime(2023),
-      lastDate: DateTime.now(),
-    );
-
-    if (pickedDateTime != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(selectedDateTimeAnalysis),
-      );
-
-      if (pickedTime != null) {
-        setState(() {
-          selectedDateTimeAnalysis = DateTime(
-            pickedDateTime.year,
-            pickedDateTime.month,
-            pickedDateTime.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-        });
-      }
-    }
-    for (var element in _jeeps) {
-      _mapController.removeSymbol(element.data);
-    }
-    _jeeps.clear();
-    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
-    _addSymbols(test);
-    isMouseHoveringRouteInfo = false;
-  }
-
   Future<void> _addSeconds(int seconds, bool isAdd) async {
     if (selectedDateTimeAnalysis != null) {
       if(isAdd){
         setState(() {
-          selectedDateTimeAnalysis = selectedDateTimeAnalysis.add(Duration(seconds: seconds));
+          _selectedDateEndHeatMap = _selectedDateEndHeatMap.add(Duration(seconds: seconds));
         });
       } else {
         setState(() {
-          selectedDateTimeAnalysis = selectedDateTimeAnalysis.subtract(Duration(seconds: seconds));
+          _selectedDateEndHeatMap = _selectedDateEndHeatMap.subtract(Duration(seconds: seconds));
         });
       }
     }
 
-    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+    List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
     _updateSymbols(test);
   }
 
@@ -796,19 +788,37 @@ class _DashboardState extends State<Dashboard> {
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   const Text(
-                                                    'Start',
+                                                    'Start Time',
                                                     style: TextStyle(fontSize: 16),
                                                     overflow: TextOverflow.ellipsis,
                                                     maxLines: 1,
                                                   ),
                                                   Text(
-                                                    _selectedDateStartHeatMap.toString().substring(0, 10),
+                                                    '${DateFormat('yyyy-MM-dd').format(_selectedDateStartHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateStartHeatMap)}',
                                                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                                     overflow: TextOverflow.ellipsis,
-                                                    maxLines: 1,
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 2,
                                                   ),
                                                 ],
-                                              ),
+                                              )
+                                              // child: Column(
+                                              //   mainAxisAlignment: MainAxisAlignment.center,
+                                              //   children: [
+                                              //     const Text(
+                                              //       'Start',
+                                              //       style: TextStyle(fontSize: 16),
+                                              //       overflow: TextOverflow.ellipsis,
+                                              //       maxLines: 1,
+                                              //     ),
+                                              //     Text(
+                                              //       _selectedDateStartHeatMap.toString().substring(0, 10),
+                                              //       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                              //       overflow: TextOverflow.ellipsis,
+                                              //       maxLines: 1,
+                                              //     ),
+                                              //   ],
+                                              // ),
                                             ),
                                           ),
                                         ),
@@ -937,7 +947,7 @@ class _DashboardState extends State<Dashboard> {
                           });
                           if(_showJeepHistoryTab){
                             _stopListenJeep();
-                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
                             _addSymbols(test);
                           } else {
                             for (var element in _jeeps) {
@@ -973,7 +983,7 @@ class _DashboardState extends State<Dashboard> {
                                     ),
                                   ),
                                   if(_showJeepHistoryTab)
-                                    DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
+                                    DownloadHistoricalJeepCSV(route_choice: route_choice, selectedStartDateTime: _selectedDateStartHeatMap, selectedEndDateTime: _selectedDateEndHeatMap),
                                 ],
                               ),
                               if(_showJeepHistoryTab)
@@ -989,30 +999,63 @@ class _DashboardState extends State<Dashboard> {
                                           Expanded(
                                             flex: 3,
                                             child: GestureDetector(
-                                              onTap: () => _selectDateTime(context),
+                                              onTap: () => _selectDateStartHeatMap(context),
                                               child: Container(
-                                                padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                                decoration: const BoxDecoration(
-                                                  color: Constants.primaryColor,
-                                                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                                                ),
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    const Text(
-                                                      'Set Time',
-                                                      style: TextStyle(fontSize: 16),
-                                                      overflow: TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                    ),
-                                                    Text(
-                                                      DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTimeAnalysis).toString(),
-                                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                      overflow: TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                    ),
-                                                  ],
-                                                ),
+                                                  padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                  decoration: const BoxDecoration(
+                                                    color: Constants.primaryColor,
+                                                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      const Text(
+                                                        'Start Time',
+                                                        style: TextStyle(fontSize: 16),
+                                                        overflow: TextOverflow.ellipsis,
+                                                        maxLines: 1,
+                                                      ),
+                                                      Text(
+                                                        '${DateFormat('yyyy-MM-dd').format(_selectedDateStartHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateStartHeatMap)}',
+                                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                        overflow: TextOverflow.ellipsis,
+                                                        textAlign: TextAlign.center,
+                                                        maxLines: 2,
+                                                      ),
+                                                    ],
+                                                  )
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: Constants.defaultPadding),
+                                          Expanded(
+                                            flex: 3,
+                                            child: GestureDetector(
+                                              onTap: () => _selectDateEndHeatMap(context),
+                                              child: Container(
+                                                  padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                  decoration: const BoxDecoration(
+                                                    color: Constants.primaryColor,
+                                                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      const Text(
+                                                        'End Time',
+                                                        style: TextStyle(fontSize: 16),
+                                                        overflow: TextOverflow.ellipsis,
+                                                        maxLines: 1,
+                                                      ),
+                                                      Text(
+                                                        '${DateFormat('yyyy-MM-dd').format(_selectedDateEndHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateEndHeatMap)}',
+                                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                        overflow: TextOverflow.ellipsis,
+                                                        textAlign: TextAlign.center,
+                                                        maxLines: 2,
+                                                      ),
+                                                    ],
+                                                  )
                                               ),
                                             ),
                                           ),
@@ -1328,7 +1371,6 @@ class _DashboardState extends State<Dashboard> {
                                                           child: Icon(Icons.settings, size: 20, color: _selectSettingsHeatMap?Colors.lightBlue:Colors.white38)),
                                                       SizedBox(width: Constants.defaultPadding),
                                                       DownloadHeatMapCSV(route_choice: route_choice, selectedDateStart: _selectedDateStartHeatMap, selectedDateEnd: _selectedDateEndHeatMap),
-
                                                     ],
                                                   ),
                                               ],
@@ -1495,23 +1537,24 @@ class _DashboardState extends State<Dashboard> {
                                                               color: Constants.primaryColor,
                                                               borderRadius: BorderRadius.all(Radius.circular(15)),
                                                             ),
-                                                            child: Column(
-                                                              mainAxisAlignment: MainAxisAlignment.center,
-                                                              children: [
-                                                                const Text(
-                                                                  'Start',
-                                                                  style: TextStyle(fontSize: 16),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                                Text(
-                                                                  _selectedDateStartHeatMap.toString().substring(0, 10),
-                                                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                                  overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
-                                                                ),
-                                                              ],
-                                                            ),
+                                                              child: Column(
+                                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                                children: [
+                                                                  const Text(
+                                                                    'Start Time',
+                                                                    style: TextStyle(fontSize: 16),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    maxLines: 1,
+                                                                  ),
+                                                                  Text(
+                                                                    '${DateFormat('yyyy-MM-dd').format(_selectedDateStartHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateStartHeatMap)}',
+                                                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    textAlign: TextAlign.center,
+                                                                    maxLines: 2,
+                                                                  ),
+                                                                ],
+                                                              )
                                                           ),
                                                         ),
                                                       ),
@@ -1530,19 +1573,20 @@ class _DashboardState extends State<Dashboard> {
                                                               mainAxisAlignment: MainAxisAlignment.center,
                                                               children: [
                                                                 const Text(
-                                                                  'End',
+                                                                  'End Time',
                                                                   style: TextStyle(fontSize: 16),
                                                                   overflow: TextOverflow.ellipsis,
                                                                   maxLines: 1,
                                                                 ),
                                                                 Text(
-                                                                  _selectedDateEndHeatMap.toString().substring(0, 10),
+                                                                  '${DateFormat('yyyy-MM-dd').format(_selectedDateEndHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateEndHeatMap)}',
                                                                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                                                   overflow: TextOverflow.ellipsis,
-                                                                  maxLines: 1,
+                                                                  textAlign: TextAlign.center,
+                                                                  maxLines: 2,
                                                                 ),
                                                               ],
-                                                            ),
+                                                            )
                                                           ),
                                                         ),
                                                       ),
@@ -1640,7 +1684,7 @@ class _DashboardState extends State<Dashboard> {
                                         });
                                         if(_showJeepHistoryTab){
                                           _stopListenJeep();
-                                          List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis));
+                                          List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
                                           _addSymbols(test);
                                         } else {
                                           for (var element in _jeeps) {
@@ -1679,7 +1723,7 @@ class _DashboardState extends State<Dashboard> {
                                                 ),
 
                                                 if(_showJeepHistoryTab)
-                                                  DownloadHistoricalJeepCSV(route_choice: route_choice, selectedDateTime: selectedDateTimeAnalysis),
+                                                  DownloadHistoricalJeepCSV(route_choice: route_choice, selectedStartDateTime: _selectedDateStartHeatMap, selectedEndDateTime: _selectedDateEndHeatMap),
                                               ],
                                             ),
                                             if(_showJeepHistoryTab)
@@ -1695,30 +1739,63 @@ class _DashboardState extends State<Dashboard> {
                                                         Expanded(
                                                           flex: 3,
                                                           child: GestureDetector(
-                                                            onTap: () => _selectDateTime(context),
+                                                            onTap: () => _selectDateStartHeatMap(context),
                                                             child: Container(
-                                                              padding: const EdgeInsets.all(Constants.defaultPadding/2),
-                                                              decoration: const BoxDecoration(
-                                                                color: Constants.primaryColor,
-                                                                borderRadius: BorderRadius.all(Radius.circular(15)),
-                                                              ),
-                                                              child: Column(
-                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                children: [
-                                                                  const Text(
-                                                                    'Set Time',
-                                                                    style: TextStyle(fontSize: 16),
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    maxLines: 1,
-                                                                  ),
-                                                                  Text(
-                                                                    DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTimeAnalysis).toString(),
-                                                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    maxLines: 1,
-                                                                  ),
-                                                                ],
-                                                              ),
+                                                                padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                                decoration: const BoxDecoration(
+                                                                  color: Constants.primaryColor,
+                                                                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                                ),
+                                                                child: Column(
+                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  children: [
+                                                                    const Text(
+                                                                      'Start Time',
+                                                                      style: TextStyle(fontSize: 16),
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                      maxLines: 1,
+                                                                    ),
+                                                                    Text(
+                                                                      '${DateFormat('yyyy-MM-dd').format(_selectedDateStartHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateStartHeatMap)}',
+                                                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                      textAlign: TextAlign.center,
+                                                                      maxLines: 2,
+                                                                    ),
+                                                                  ],
+                                                                )
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: Constants.defaultPadding),
+                                                        Expanded(
+                                                          flex: 3,
+                                                          child: GestureDetector(
+                                                            onTap: () => _selectDateEndHeatMap(context),
+                                                            child: Container(
+                                                                padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                                                                decoration: const BoxDecoration(
+                                                                  color: Constants.primaryColor,
+                                                                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                                                                ),
+                                                                child: Column(
+                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  children: [
+                                                                    const Text(
+                                                                      'End Time',
+                                                                      style: TextStyle(fontSize: 16),
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                      maxLines: 1,
+                                                                    ),
+                                                                    Text(
+                                                                      '${DateFormat('yyyy-MM-dd').format(_selectedDateEndHeatMap)}\n${DateFormat('HH:mm:ss').format(_selectedDateEndHeatMap)}',
+                                                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                      textAlign: TextAlign.center,
+                                                                      maxLines: 2,
+                                                                    ),
+                                                                  ],
+                                                                )
                                                             ),
                                                           ),
                                                         ),
@@ -1947,7 +2024,7 @@ class _DashboardState extends State<Dashboard> {
                                                   ),
                                                 ):(_showJeepHistoryTab
                                                     ?FutureBuilder(
-                                                    future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                                    future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap)),
                                                     builder: (context, snapshot){
                                                       if(!snapshot.hasData || snapshot.hasError){
                                                         return const RouteInfoShimmerV2();
@@ -2243,7 +2320,7 @@ class _DashboardState extends State<Dashboard> {
                                                   ),
                                                 ):(_showJeepHistoryTab
                                                     ?FutureBuilder(
-                                                    future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev2(route_choice, Timestamp.fromDate(selectedDateTimeAnalysis)),
+                                                    future: FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap)),
                                                     builder: (context, snapshot) {
                                                       if (!snapshot.hasData || snapshot.hasError) {
                                                         return const ShimmerDesktopRouteInfo();

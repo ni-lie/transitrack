@@ -11,7 +11,37 @@ class FireStoreDataBase{
     });
   }
 
-  Future<List<JeepData>> getLatestJeepDataPerDeviceIdFuturev2(int routeId, Timestamp timestamp) async {
+  Future<List<JeepData>> getLatestJeepDataPerDeviceIdFuturev2(int routeId, Timestamp startTimestamp, Timestamp endTimestamp) async {
+    List<JeepData> jeepDataList = [];
+    if(routeId == -1){
+      return jeepDataList;
+    }
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('jeeps_historical')
+        .get();
+
+    for (QueryDocumentSnapshot<Map<String, dynamic>> jeepDocument in querySnapshot.docs) {
+      QuerySnapshot<Map<String, dynamic>> subcollectionSnapshot = await jeepDocument.reference
+          .collection('timeline')
+          .where('route_id', isEqualTo: routeId)
+          .where('timestamp', isGreaterThan: startTimestamp)
+          .where('timestamp', isLessThanOrEqualTo: endTimestamp)
+          .orderBy('timestamp', descending: true)
+          .limit(50)
+          .get();
+
+      if (subcollectionSnapshot.docs.isNotEmpty) {
+        for (QueryDocumentSnapshot<Map<String, dynamic>> subcollectionDocument in subcollectionSnapshot.docs) {
+          JeepData jeepData = JeepData.fromSnapshot(subcollectionDocument);
+          jeepDataList.add(jeepData);
+        }
+      }
+    }
+
+    return jeepDataList;
+  }
+
+  Future<List<JeepData>> getLatestJeepDataPerDeviceIdFuturev3(int routeId, Timestamp endTimestamp) async {
     List<JeepData> jeepDataList = [];
     if(routeId == -1){
       return jeepDataList;
@@ -24,7 +54,7 @@ class FireStoreDataBase{
       QuerySnapshot subcollectionSnapshot = await jeepDocument.reference
           .collection('timeline')
           .where('route_id', isEqualTo: routeId)
-          .where('timestamp', isLessThanOrEqualTo: timestamp)
+          .where('timestamp', isLessThanOrEqualTo: endTimestamp)
           .orderBy('timestamp', descending: true)
           .limit(1)
           .get();
