@@ -2292,6 +2292,7 @@ class _DashboardState extends State<Dashboard> {
                                                                                 overflow: TextOverflow.ellipsis,
                                                                               ),
                                                                             ),
+                                                                            SizedBox(width: 95, height: 10)
                                                                           ],
                                                                         ),
                                                                         const SizedBox(height: Constants.defaultPadding),
@@ -2367,6 +2368,7 @@ class _DashboardState extends State<Dashboard> {
                                                                                 overflow: TextOverflow.ellipsis,
                                                                               ),
                                                                             ),
+                                                                            SizedBox(width: 95, height: 10)
                                                                           ],
                                                                         ),
                                                                         const SizedBox(height: Constants.defaultPadding),
