@@ -74,9 +74,7 @@ class _DashboardState extends State<Dashboard> {
       isHoverJeep = false;
     });
     for (var Jeepney in Jeepneys) {
-      // double angleRadians = atan2(Jeepney.acceleration[1], Jeepney.acceleration[0]);
-      // double angleDegrees = angleRadians * (180 / pi);
-      int half = (Jeepney.slots_remaining+Jeepney.passenger_count)~/2;
+      int half = ((Jeepney.slots_remaining+Jeepney.passenger_count)/2).ceil();
       final jeepEntity = SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconSize: 0.1,
@@ -149,7 +147,7 @@ class _DashboardState extends State<Dashboard> {
             isHoverJeep = false;
           }
         }
-        int half = (Jeepney.slots_remaining+Jeepney.passenger_count)~/2;
+        int half = ((Jeepney.slots_remaining+Jeepney.passenger_count)/2).ceil();
         _mapController.updateSymbol(symbolToUpdate.data, SymbolOptions(
             geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
             iconRotate: Jeepney.bearing,
@@ -160,7 +158,7 @@ class _DashboardState extends State<Dashboard> {
         ));
 
       } else {
-        int half = (Jeepney.slots_remaining+Jeepney.passenger_count)~/2;
+        int half = ((Jeepney.slots_remaining+Jeepney.passenger_count)/2).ceil();
         final jeepEntity = SymbolOptions(
           geometry: LatLng(Jeepney.location.latitude, Jeepney.location.longitude),
           iconSize: 0.1,
@@ -945,16 +943,18 @@ class _DashboardState extends State<Dashboard> {
                           setState(() {
                             _showJeepHistoryTab = !_showJeepHistoryTab;
                           });
-                          if(_showJeepHistoryTab){
-                            _stopListenJeep();
-                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
-                            _addSymbols(test);
-                          } else {
-                            for (var element in _jeeps) {
-                              _mapController.removeSymbol(element.data);
+                          if(route_choice != -1){
+                            if(_showJeepHistoryTab){
+                              _stopListenJeep();
+                              List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
+                              _addSymbols(test);
+                            } else {
+                              for (var element in _jeeps) {
+                                _mapController.removeSymbol(element.data);
+                              }
+                              _jeeps.clear();
+                              _subscribeToCoordinates();
                             }
-                            _jeeps.clear();
-                            _subscribeToCoordinates();
                           }
                         },
                         child: Container(
@@ -1682,16 +1682,18 @@ class _DashboardState extends State<Dashboard> {
                                         setState(() {
                                           _showJeepHistoryTab = !_showJeepHistoryTab;
                                         });
-                                        if(_showJeepHistoryTab){
-                                          _stopListenJeep();
-                                          List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
-                                          _addSymbols(test);
-                                        } else {
-                                          for (var element in _jeeps) {
-                                            _mapController.removeSymbol(element.data);
+                                        if(route_choice != -1){
+                                          if(_showJeepHistoryTab){
+                                            _stopListenJeep();
+                                            List<JeepData> test = await FireStoreDataBase().getLatestJeepDataPerDeviceIdFuturev3(route_choice, Timestamp.fromDate(_selectedDateEndHeatMap));
+                                            _addSymbols(test);
+                                          } else {
+                                            for (var element in _jeeps) {
+                                              _mapController.removeSymbol(element.data);
+                                            }
+                                            _jeeps.clear();
+                                            _subscribeToCoordinates();
                                           }
-                                          _jeeps.clear();
-                                          _subscribeToCoordinates();
                                         }
                                       },
                                       child: Container(

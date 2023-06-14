@@ -115,6 +115,8 @@ class JeepInfoCardDetailed extends StatelessWidget {
                         Text("Ambient Temperature: ${data.temp.toStringAsFixed(2)} °C", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Speed: ${data.speed.toStringAsFixed(2)} m/s", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text("Timestamp: ${data.timestamp.toDate()}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Acceleration: x = ${data.acceleration[0].toStringAsFixed(1)}, y = ${data.acceleration[1].toStringAsFixed(1)}, z = ${data.acceleration[2].toStringAsFixed(1)}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text("Gyroscope: x = ${data.gyroscope[0].toStringAsFixed(1)}, y = ${data.gyroscope[1].toStringAsFixed(1)}, z = ${data.gyroscope[2].toStringAsFixed(1)}", style: Theme.of(context).textTheme.caption?.copyWith(color: Colors.white70), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     )
                 ),
