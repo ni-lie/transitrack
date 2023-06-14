@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../config/route_coordinates.dart';
 import '../style/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TeamPageDesktop extends StatefulWidget {
   const TeamPageDesktop({
@@ -15,6 +16,17 @@ class TeamPageDesktop extends StatefulWidget {
 
 class _TeamPageDesktopState extends State<TeamPageDesktop> {
   int face_choice = -1;
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse("https://$url");
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    )
+    ) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +209,22 @@ class _TeamPageDesktopState extends State<TeamPageDesktop> {
                     const SizedBox(height: Constants.defaultPadding),
                     Text(Members[face_choice].description, style: const TextStyle(fontStyle: FontStyle.italic), textAlign: TextAlign.justify),
                     const SizedBox(height: Constants.defaultPadding),
-                    Text("Github: ${Members[face_choice].github}\nEmail: ${Members[face_choice].email}\nLinkedIn: ${Members[face_choice].linkedin}")
+                    GestureDetector(
+                        onTap: () {
+                          _launchUrl(Members[face_choice].github);
+                        },
+                        child: Text("Github: ${Members[face_choice].github}")),
+                    GestureDetector(
+                        onTap: () {
+                          _launchUrl(Members[face_choice].email);
+                        },
+                        child: Text("Email: ${Members[face_choice].email}")),
+
+                    GestureDetector(
+                        onTap: () {
+                          _launchUrl(Members[face_choice].linkedin);
+                        },
+                        child: Text("LinkedIn: ${Members[face_choice].linkedin}"))
                   ]
               ),
             ),

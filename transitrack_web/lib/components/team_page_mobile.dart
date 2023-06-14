@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../config/route_coordinates.dart';
 import '../style/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TeamPageMobile extends StatefulWidget {
   const TeamPageMobile({
@@ -15,6 +16,17 @@ class TeamPageMobile extends StatefulWidget {
 
 class _TeamPageMobileState extends State<TeamPageMobile> {
   int face_choice = -1;
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse("https://$url");
+    if (!await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      )
+    ) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +42,16 @@ class _TeamPageMobileState extends State<TeamPageMobile> {
             child: Stack(
               children: [
                 Image.asset("assets/team.jpg", fit: BoxFit.cover),
+                if(face_choice == 0)
+                  Image.asset("assets/teamrk.jpg", fit: BoxFit.cover),
+                if(face_choice == 1)
+                  Image.asset("assets/teamdenver.jpg", fit: BoxFit.cover),
+                if(face_choice == 2)
+                  Image.asset("assets/teamzed.jpg", fit: BoxFit.cover),
+                if(face_choice == 3)
+                  Image.asset("assets/teamcj.jpg", fit: BoxFit.cover),
+                if(face_choice == 4)
+                  Image.asset("assets/teamvan.jpg", fit: BoxFit.cover),
               ],
             )),
 
@@ -49,7 +71,7 @@ class _TeamPageMobileState extends State<TeamPageMobile> {
 
         if(face_choice != -1)
           Container(
-            padding: const EdgeInsets.only(right: Constants.defaultPadding),
+            padding: const EdgeInsets.all(Constants.defaultPadding),
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -57,7 +79,7 @@ class _TeamPageMobileState extends State<TeamPageMobile> {
                   Center(child: Container(
                     width: 120,
                     height: 120,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                     ),
                     child: ClipOval(
@@ -72,10 +94,87 @@ class _TeamPageMobileState extends State<TeamPageMobile> {
                   const SizedBox(height: Constants.defaultPadding),
                   Text(Members[face_choice].description, style: const TextStyle(fontStyle: FontStyle.italic), textAlign: TextAlign.justify),
                   const SizedBox(height: Constants.defaultPadding),
-                  Text("Github: ${Members[face_choice].github}\nEmail: ${Members[face_choice].email}\nLinkedIn: ${Members[face_choice].linkedin}")
+                  GestureDetector(
+                      onTap: () {
+                        _launchUrl(Members[face_choice].github);
+                      },
+                      child: Text("Github: ${Members[face_choice].github}")),
+                  GestureDetector(
+                      onTap: () {
+                        _launchUrl(Members[face_choice].email);
+                      },
+                      child: Text("Email: ${Members[face_choice].email}")),
+
+                  GestureDetector(
+                      onTap: () {
+                        _launchUrl(Members[face_choice].linkedin);
+                      },
+                      child: Text("LinkedIn: ${Members[face_choice].linkedin}"))
                 ]
             ),
-          )
+          ),
+
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: GestureDetector(
+                onTap: () {
+                  if(face_choice > 0) {
+                    setState(() {
+                      face_choice--;
+                    });
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.all(Constants.defaultPadding),
+                  padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(Constants.defaultPadding),
+                    color: Constants.bgColor,
+                    border: Border.all(
+                      width: 2,
+                      color: Colors.lightBlue,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_left,
+                    color: Colors.lightBlue
+                  ),
+                ),
+              )
+            ),
+            const Spacer(),
+            Expanded(
+              flex: 2,
+              child: GestureDetector(
+                onTap: () {
+                  if(face_choice < 4) {
+                    setState(() {
+                      face_choice++;
+                    });
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.all(Constants.defaultPadding),
+                  padding: const EdgeInsets.all(Constants.defaultPadding/2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(Constants.defaultPadding),
+                    color: Constants.bgColor,
+                    border: Border.all(
+                      width: 2,
+                      color: Colors.lightBlue,
+                    ),
+                  ),
+                  child: const Icon(
+                      Icons.arrow_right,
+                      color: Colors.lightBlue,
+                  ),
+                ),
+              )
+            )
+          ],
+        )
       ],
     );
   }
